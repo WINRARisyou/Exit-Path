@@ -1,0 +1,3675 @@
+<script>/*
+    Added Reduce Lag button for
+    those poor saps with terrible
+    laggy ChromeBooks.
+    */
+    
+    /**
+    STAGE CREATOR made! Now you
+    can make your own stages!
+    https://www.khanacademy.org/cs/_/5936425535488000
+    
+    **************
+    AN EXPLANATION
+    **************
+    Exit Path 2 (Part 1)
+    
+    Well, here it is. The game you've all been
+    waiting for. Exit Path 2. Or at least half
+    of it.
+    
+    You see, at first I started making the game
+    with great fervor. But then it died down,
+    and I basically stopped a couple months ago.
+    I've decided to release what I've made so
+    far as a "Part 1", though. I'll try to
+    update the high scores whenever possible.
+    
+    Hope you like it!          
+    
+    Note: I *might* make a Part 2, but don't
+    bet on it.
+    
+    ***********
+    HOW TO PLAY
+    ***********
+    Try to complete the speedrun as quickly as
+    possible. Skipping a stage entails a 2-minute
+    penalty. When you're done, go to the menu
+    screen, save as a spinoff, and paste a link
+    to the spinoff in the High Scores thread
+    of the T&T to get added to the High Scores.
+    Your high score will be added IF AND ONLY IF
+    you present it in the correct thread with a
+    spinoff.
+    
+    ******
+    QUOTES
+    ******
+    "Sublime graphics and pristine transitions."
+    - Photonic Symmetry
+    
+    "This deserves at least a thousand votes."
+    - Tegoon
+    
+    "The graphics and gameplay are excellent."
+    - Isaac Emerald
+    
+    *****
+    FLAGS
+    *****
+    Does Not Belong: "Children should not play games, they should do math."
+    
+    *****
+    LINKS
+    *****
+    My Profile: https://www.khanacademy.org/profile/lionofgd/
+    Exit Path 1: https://www.khanacademy.org/cs/_/6719767876861952
+    Exit Path 1 Stage Creator: https://www.khanacademy.org/cs/_/5200995122806784
+    The "Hacked" Version: https://www.khanacademy.org/cs/_/6295199206473728
+    
+    If you want to learn how to make a
+    platformer game like this one, try:
+    https://www.khanacademy.org/cs/_/3181625998
+    **/
+    
+    /* We're initializing a couple variables at the top. */
+    var state = Program.fatalErrorOccurence ? 'exitPath2' : 'loading',
+        timer = 0,
+        paused = false,
+        reduceLag = false,
+        yourColor = -16711936,
+        speedrunTimer = 10800,
+        crusherOfDoom = 0,
+        framerate,
+        usage, cx,
+        requestNewFlagGradient = true;
+    
+    scale(width / 600, height / 400);
+    
+    /*
+    :P
+    */
+    Math.TAU = Math.PI * 2;
+    
+    delete Program.fatalErrorOccurence;
+    
+    /* Works keys. */
+    var keys = {};
+    keyPressed = function() { keys[keyCode] = keys[key.toString().toLowerCase()] = true; };
+    keyReleased = function() { keys[keyCode] = keys[key.toString().toLowerCase()] = false; };
+    
+    /* Mouse object. */
+    var mouse = {
+        get x() {   return mouseX * (600 / width);  },
+        get y() {   return mouseY * (400 / height); },
+        get pressed() { return mouseIsPressed;      },
+        click: false,
+        out: false,
+        over: function(x, y, w, h) {
+            if (arguments.length === 1) {
+                return this.x >= x.x && this.x <= x.x + x.w &&
+                       this.y >= x.y && this.y <= x.y + x.h;
+            }
+            return this.x >= x && this.x <= x + w &&
+                   this.y >= y && this.y <= y + h;
+        },
+        clicking: function(x, y, w, h) {
+            return this.click && (arguments.length === 1 ? this.over(x) : this.over(x, y, w, h));
+        }
+    };
+    
+    /* Makes sure that buttons won't flash white even when the mouse is not over the screen. */
+    mouseOut = function() { mouse.out = true; };
+    mouseOver = function() { mouse.out = false; };
+    
+    /* Helps with clicking mechanics. */
+    mouseReleased = function() {
+        mouse.click = mouseButton;
+    };
+    
+    /* Returns a scaled version of the "get" function.
+    Used to make sure that the window is of appropriate size. */
+    var screenshot = function(x, y) {
+        x = x || 20;
+        y = y || 20;
+        return get(0, 0, x * width / 600, y * height / 400).sourceImg;
+    };
+    /* Object that contains all of the images to be loaded. */
+    var images = {
+        'block-0': function() {
+            noStroke();
+            for (var i = 0; i < 20; i++) {
+                fill(64 + i * 2);
+                rect(i, 0, 1, 20);
+            }
+            stroke(96);
+            strokeWeight(2);
+            noFill();
+            rect(0, 0, 20, 20);
+            return screenshot();
+        },
+        'block-1': function() {
+            noStroke();
+            for (var i = 0; i < 20; i++) {
+                fill(i * 2);
+                rect(i, 0, 1, 20);
+            }
+            stroke(64);
+            strokeWeight(2);
+            noFill();
+            rect(0, 0, 20, 20);
+            return screenshot();
+        },
+        'block-2': function() {
+            noStroke();
+            for (var i = 0; i < 20; i++) {
+                fill(128 + i * 2);
+                rect(i, 0, 1, 20);
+            }
+            stroke(64);
+            strokeWeight(1);
+            noFill();
+            rect(0, 0, 20, 20);
+            return screenshot();
+        },
+        'flag': function() {
+            fill(128, 128, 128);
+            noStroke();
+            for (var i = 5; i > 0; i -= 0.5) {
+                fill(128 - 10 * i, 128 - 10 * i, 128 - 10 * i);
+                rect(17.5 + i, 0, 0.5, 100);
+            }
+            rect(0, 95, 40, 5, 
+            5, 5, 0, 0);
+            fill(96, 96, 96);
+            rect(10, 0, 20, 5,
+            0, 0, 5, 5);
+            for (var i = 0; i < 9; i++) {
+                stroke(96, 96, 96);
+                strokeWeight(1);
+                ellipse(13, 10 + 7 * i, 4, 4);
+                line(13, 10 + 7 * i, 18, 10 + 7 * i);
+            }
+            return screenshot(40, 100);
+        },
+        'wheel': function() {
+            var wheel = function(spokes, sharpness, size) {
+                pushMatrix();
+                translate(200, 200);
+                noStroke();
+                for (var i = 0; i < spokes; i++) {
+                    rotate(360 / spokes);
+                    beginShape();
+                    vertex(-360 / spokes, size);
+                    vertex(0, size + sharpness);
+                    vertex(360 / spokes, size);
+                    endShape();
+                }
+                ellipse(0, 0, size * 2 + 2, size * 2 + 2);
+                popMatrix();
+            };
+            pushMatrix();
+            translate(-130, -130);
+            fill(212, 212, 212);
+            wheel(20, 40, 30);
+            popMatrix();
+            fill(255, 255, 255);
+            stroke(64, 64, 64);
+            strokeWeight(1);
+            ellipse(70, 70, 10, 10);
+            return screenshot(140, 140);
+        },
+        'wheel-dark': function() {
+            var wheel = function(spokes, sharpness, size) {
+                pushMatrix();
+                translate(200, 200);
+                noStroke();
+                for (var i = 0; i < spokes; i++) {
+                    rotate(360 / spokes);
+                    beginShape();
+                    vertex(-360 / spokes, size);
+                    vertex(0, size + sharpness);
+                    vertex(360 / spokes, size);
+                    endShape();
+                }
+                ellipse(0, 0, size * 2 + 2, size * 2 + 2);
+                popMatrix();
+            };
+            pushMatrix();
+            translate(-130, -130);
+            fill(32);
+            wheel(20, 40, 30);
+            popMatrix();
+            fill(128);
+            stroke(196);
+            strokeWeight(1);
+            ellipse(70, 70, 10, 10);
+            return screenshot(140, 140);
+        },
+        'bouncer': function() {
+            fill(128, 128, 128);
+            noStroke();
+            for (var i = 0; i < 20; i += 2) {
+                rect(0, i, 20, 1);
+            }
+            fill(64, 64, 64);
+            for (var i = 0; i < 20; i += 2) {
+                rect(0, i + 1, 20, 1);
+            }
+            stroke(32, 32, 32);
+            noFill();
+            rect(0, 0, 20, 20,
+            5, 5, 0, 0);
+            return screenshot();
+        },
+        'bouncer-top': function() {
+            noStroke();
+            fill(64, 64, 64);
+            for (var i = 0; i < 20; i += 7) {
+                quad(i, 0, 3.5 + i, 0, -1.5 + i, 5, 2 + i, 5);
+            }
+            fill(128, 128, 128);
+            pushMatrix();
+            translate(3.5, 0);
+            for (var i = 0; i < 20; i += 7) {
+                quad(i, 0, 3.5 + i, 0, -1.5 + i, 5, 2 + i, 5);
+            }
+            popMatrix();
+            return screenshot(20, 5);
+        },
+        'flow-block': function() {
+            stroke(128);
+            strokeWeight(2);
+            noFill();
+            rect(0, 0, 20, 20);
+            fill(0, 255, 0, 200);
+            ellipse(10, 10, 5, 5);
+            noFill();
+            bezier(0, 0, 0, 20, 20, 20, 20, 0);
+            bezier(0, 20, 0, 0, 20, 0, 20, 20);
+            bezier(0, 0, 20, 0, 20, 20, 0, 20);
+            bezier(20, 0, 0, 0, 0, 20, 20, 20);
+            return screenshot();
+        },
+        'anti-block': function() {
+            stroke(128);
+            strokeWeight(2);
+            noFill();
+            rect(0, 0, 20, 20);
+            fill(255, 0, 0, 200);
+            ellipse(10, 10, 5, 5);
+            noFill();
+            bezier(0, 0, 0, 20, 20, 20, 20, 0);
+            bezier(0, 20, 0, 0, 20, 0, 20, 20);
+            bezier(0, 0, 20, 0, 20, 20, 0, 20);
+            bezier(20, 0, 0, 0, 0, 20, 20, 20);
+            return screenshot();
+        },
+        'pendulum-origin': function() {
+            var wheel = function(spokes, sharpness, size) {
+                pushMatrix();
+                translate(200, 200);
+                noStroke();
+                for (var i = 0; i < spokes; i++) {
+                    rotate(360 / spokes);
+                    beginShape();
+                    vertex(-360 / spokes, size);
+                    vertex(0, size + sharpness);
+                    vertex(360 / spokes, size);
+                    endShape();
+                }
+                ellipse(0, 0, size * 2 + 2, size * 2 + 2);
+                popMatrix();
+            };
+            pushMatrix();
+            translate(-130, -130);
+            fill(212, 212, 212);
+            wheel(20, 60, 10);
+            popMatrix();
+            return screenshot(140, 140);
+        },
+        'crusher-top': function() {
+            fill(255, 255, 255);
+            noStroke();
+            rect(5, 0, 10, 20);
+            return screenshot();
+        },
+        'crusher': function() {
+            noStroke();
+            fill(255, 255, 255);
+            rect(0, 0, 20, 3);
+            triangle(0, 2, 5, 2, 5, 20);
+            triangle(10, 2, 15, 2, 15, 20);
+            fill(196, 196, 196);
+            triangle(5, 2, 5, 20, 10, 2);
+            triangle(15, 2, 15, 20, 20, 2);
+            return screenshot();
+        },
+        'spike-dynamic-down': function() {
+            noStroke();
+            fill(255, 255, 255);
+            triangle(0, 20, 5, 20, 5, 0);
+            triangle(10, 20, 15, 20, 15, 0);
+            fill(196, 196, 196);
+            triangle(5, 0, 5, 20, 10, 20);
+            triangle(15, 0, 15, 20, 20, 20);
+            return screenshot();
+        },
+        'spike-dynamic-up': function() {
+            noStroke();
+            fill(255, 255, 255);
+            triangle(0, 0, 5, 20, 5, 0);
+            triangle(10, 0, 15, 20, 15, 0);
+            fill(196, 196, 196);
+            triangle(5, 0, 5, 20, 10, 0);
+            triangle(15, 0, 15, 20, 20, 0);
+            return screenshot();
+        },
+        'spike-dynamic-left': function() {
+            noStroke();
+            fill(255, 255, 255);
+            triangle(0, 0, 0, 5, 20, 5);
+            triangle(0, 10, 0, 15, 20, 15);
+            fill(196, 196, 196);
+            triangle(0, 10, 0, 5, 20, 5);
+            triangle(0, 20, 0, 15, 20, 15);
+            return screenshot();
+        },
+        'spike-dynamic-right': function() {
+            noStroke();
+            fill(255, 255, 255);
+            triangle(20, 0, 0, 5, 20, 5);
+            triangle(20, 10, 0, 15, 20, 15);
+            fill(196, 196, 196);
+            triangle(20, 10, 0, 5, 20, 5);
+            triangle(20, 20, 0, 15, 20, 15);
+            return screenshot();
+        },
+        'spike-static-up': function() {
+            noStroke();
+            fill(255, 255, 255);
+            triangle(0, 0, 5, 0, 5, 20);
+            triangle(10, 0, 15, 0, 15, 20);
+            triangle(20, 0, 25, 0, 25, 20);
+            fill(196, 196, 196);
+            triangle(5, 0, 5, 20, 10, 0);
+            triangle(15, 0, 15, 20, 20, 0);
+            triangle(25, 0, 25, 20, 30, 0);
+            return screenshot(30, 20);
+        },
+        'spike-static-down': function() {
+            noStroke();
+            fill(255, 255, 255);
+            triangle(0, 20, 5, 20, 5, 0);
+            triangle(10, 20, 15, 20, 15, 0);
+            triangle(20, 20, 25, 20, 25, 0);
+            fill(196, 196, 196);
+            triangle(5, 20, 5, 0, 10, 20);
+            triangle(15, 20, 15, 0, 20, 20);
+            triangle(25, 20, 25, 0, 30, 20);
+            return screenshot(30, 20);
+        },
+        'spike-static-left': function() {
+            noStroke();
+            fill(255, 255, 255);
+            triangle(0, 0, 0, 5, 20, 5);
+            triangle(0, 10, 0, 15, 20, 15);
+            triangle(0, 20, 0, 25, 20, 25);
+            fill(196, 196, 196);
+            triangle(0, 5, 0, 10, 20, 5);
+            triangle(0, 15, 0, 20, 20, 15);
+            triangle(0, 25, 0, 30, 20, 25);
+            return screenshot(20, 30);
+        },
+        'spike-static-right': function() {
+            noStroke();
+            fill(255, 255, 255);
+            triangle(20, 0, 0, 5, 20, 5);
+            triangle(20, 10, 0, 15, 20, 15);
+            triangle(20, 20, 0, 25, 20, 25);
+            fill(196, 196, 196);
+            triangle(0, 5, 20, 10, 20, 5);
+            triangle(0, 15, 20, 20, 20, 15);
+            triangle(0, 25, 20, 30, 20, 25);
+            return screenshot(20, 30);
+        },
+        'spectrum': function() {
+            colorMode(HSB);
+            for (var i = 0; i <= 180; i++) {
+                stroke(map(i, 0, 180, 0, 255), 255, 255);
+                line(0, i, 20, i);
+            }
+            colorMode(RGB);
+            return screenshot(20, 180);
+        },
+        'teleporter-1': function() {
+            noStroke();
+            fill(64);
+            rect(0, 0, 3, 30);
+            rect(17, 0, 3, 30);
+            rect(3, 0, 14, 2);
+            rect(3, 22, 14, 8);
+            for (var i = 0; i < 3; i++) {
+                fill(32);
+                ellipse(i * 6 + 4, 25, 5, 5);
+                fill(0);
+                ellipse(i * 6 + 4, 25, 3, 3);
+            }
+            fill(128);
+            rect(0, 27.5, 20, 1);
+            fill(0, 0, 0, 50);
+            rect(3, 2, 14, 20);
+            return screenshot(20, 30);
+        },
+        'teleporter-2': function() {
+            noStroke();
+            fill(196);
+            rect(0, 0, 3, 30);
+            rect(17, 0, 3, 30);
+            rect(3, 0, 14, 2);
+            rect(3, 22, 14, 8);
+            for (var i = 0; i < 3; i++) {
+                fill(128);
+                ellipse(i * 6 + 4, 25, 5, 5);
+                fill(64);
+                ellipse(i * 6 + 4, 25, 3, 3);
+            }
+            fill(128);
+            rect(0, 27.5, 20, 1);
+            fill(255, 255, 255, 50);
+            rect(3, 2, 14, 20);
+            return screenshot(20, 30);
+        },
+        'mover-left': function() {
+            noStroke();
+            for (var i = 0; i < 20; i++) {
+                fill(i * 2);
+                rect(i, 0, 1, 20);
+            }
+            stroke(64);
+            strokeWeight(2);
+            noFill();
+            rect(0, 0, 20, 20);
+            fill(64);
+            noStroke();
+            rect(1, 5, 18, 1);
+            rect(1, 15, 18, 1);
+            fill(196, 196, 196, 200);
+            textAlign(CENTER, CENTER);
+            textSize(10);
+            text('<<<', 10, 10);
+            return screenshot();
+        },
+        'mover-right': function() {
+            for (var i = 0; i < 20; i++) {
+                fill(i * 2);
+                rect(i, 0, 1, 20);
+            }
+            stroke(64);
+            strokeWeight(2);
+            noFill();
+            rect(0, 0, 20, 20);
+            fill(64);
+            noStroke();
+            rect(1, 5, 18, 1);
+            rect(1, 15, 18, 1);
+            fill(196, 196, 196, 200);
+            textAlign(CENTER, CENTER);
+            textSize(10);
+            text('>>>', 10, 10);
+            return screenshot();
+        },
+        'crusher-of-doom-front': function() {
+            noStroke();
+            pushMatrix();
+            for (var i = 0; i < 20; i++) {
+                fill(255, 255, 255);
+                rect(0, 0, 3, 20);
+                triangle(2, 0, 2, 5, 20, 5);
+                triangle(2, 10, 2, 15, 20, 15);
+                fill(196, 196, 196);
+                triangle(2, 5, 20, 5, 2, 10);
+                triangle(2, 15, 20, 15, 2, 20);
+                translate(0, 20);
+            }
+            popMatrix();
+            return screenshot(20, 400);
+        },
+        'crusher-of-doom': function() {
+            noStroke();
+            pushMatrix();
+            for (var i = 0; i < 20; i++) {
+                for (var j = 5; j < 15; j++) {
+                    fill(lerpColor(-1, -8355712, Math.abs(10 - j) / 10));
+                    rect(0, j, 20, 1);
+                }
+                translate(0, 20);
+            }
+            popMatrix();
+            return screenshot(20, 400);
+        },
+        'flag-gradient': function() {
+            for (var i = 0; i < 255; i++) {
+                /* Use bit shifting instead of the red(), green(), and blue() functions. */
+                fill(yourColor >> 16 & 0xFF, yourColor >> 8 & 0xFF, yourColor & 0xFF, 255 - i);
+                noStroke();
+                rect(0, 255 - i, 20, 1);
+            }
+            return screenshot(20, 255);
+        },
+        'flow-block-halo': function() {
+            noStroke();
+            fill(0, 255, 0, 10);
+            for (var i = 0; i < 60; i++) {
+                ellipse(60, 60, i * 2, i * 2);
+            }
+            return screenshot(120, 120);
+        },
+        'anti-block-halo': function() {
+            noStroke();
+            fill(255, 0, 0, 10);
+            for (var i = 0; i < 60; i++) {
+                ellipse(60, 60, i * 2, i * 2);
+            }
+            return screenshot(120, 120);
+        },
+        'city-foreground': function() {
+            pushMatrix();
+            translate(0, -72);
+            noStroke();
+            fill(32);
+            beginShape();
+            vertex(400, 300);
+            vertex(400, 400);
+            vertex(0, 400);
+            vertex(0, 300);
+            vertex(20, 300);
+            vertex(20, 200);
+            vertex(40, 200);
+            vertex(40, 100);
+            bezierVertex(40, 100, 60, 40, 80, 100);
+            vertex(80, 100);
+            vertex(80, 140);
+            vertex(100, 140);
+            vertex(100, 120);
+            bezierVertex(100, 120, 110, 100, 120, 120);
+            vertex(120, 120);
+            vertex(120, 150);
+            vertex(80, 150);
+            vertex(80, 300);
+            vertex(120, 300);
+            vertex(120, 200);
+            bezierVertex(120, 200, 150, 150, 180, 200);
+            vertex(180, 200);
+            vertex(180, 300);
+            vertex(200, 300);
+            vertex(200, 150);
+            vertex(225, 150);
+            vertex(225, 110);
+            vertex(230, 110);
+            vertex(230, 150);
+            vertex(300, 150);
+            vertex(275, 300);
+            vertex(325, 300);
+            vertex(325, 200);
+            vertex(350, 200);
+            vertex(350, 210);
+            vertex(340, 210);
+            vertex(370, 300);
+            endShape();
+            popMatrix();
+            return screenshot(400, 328);
+        },
+        'city-background': function() {
+            pushMatrix();
+            scale(0.5);
+            translate(0, -72);
+            noStroke();
+            fill(0);
+            beginShape();
+            vertex(400, 300);
+            vertex(400, 400);
+            vertex(0, 400);
+            vertex(0, 300);
+            vertex(20, 300);
+            vertex(20, 200);
+            vertex(40, 200);
+            vertex(40, 100);
+            bezierVertex(40, 100, 60, 40, 80, 100);
+            vertex(80, 100);
+            vertex(80, 140);
+            vertex(100, 140);
+            vertex(100, 120);
+            bezierVertex(100, 120, 110, 100, 120, 120);
+            vertex(120, 120);
+            vertex(120, 150);
+            vertex(80, 150);
+            vertex(80, 300);
+            vertex(120, 300);
+            vertex(120, 200);
+            bezierVertex(120, 200, 150, 150, 180, 200);
+            vertex(180, 200);
+            vertex(180, 300);
+            vertex(200, 300);
+            vertex(200, 150);
+            vertex(225, 150);
+            vertex(225, 110);
+            vertex(230, 110);
+            vertex(230, 150);
+            vertex(300, 150);
+            vertex(275, 300);
+            vertex(325, 300);
+            vertex(325, 200);
+            vertex(350, 200);
+            vertex(350, 210);
+            vertex(340, 210);
+            vertex(370, 300);
+            endShape();
+            popMatrix();
+            return screenshot(200, 113);
+        },
+        'flow-gui': function() {
+            pushMatrix();
+            translate(-107.5, -8);
+            fill(196, 196, 196);
+            textFont(createFont("Arial"), 12);
+            textAlign(LEFT, TOP);
+            text("FLOW", 107.5, 8);
+            stroke(0, 0, 0);
+            strokeWeight(0.5);
+            noFill();
+            rect(150, 8, 300, 22);
+            noStroke();
+            fill(32, 32, 32);
+            rect(150, 8, 75, 10);
+            rect(150, 28, 75, 3);
+            rect(235, 18, 215, 13);
+            triangle(225, 8, 225, 18, 235, 8);
+            triangle(235, 18, 235, 30, 222.5, 30);
+            stroke(128, 128, 128);
+            line(225, 8, 225, 30);
+            popMatrix();
+            return screenshot(342, 22);
+        },
+    };
+    
+    /* Creates an array of images to store during load. */
+    var imageArray = [],
+        imageKeys = Object.keys(images);
+    
+    /* Pushes objects with correct image keys into image array. */
+    for (var imageKey = 0; imageKey < imageKeys.length;) {
+        var img = images[imageKeys[imageKey]];
+        img.key = imageKeys[imageKey++];
+        imageArray.push(img);
+    }
+    
+    /*
+    fastImage(image, x, y, w, h)
+    25-30% faster than normal image()
+    */
+    var fastImage = (function() {
+        var context = (function() { return this; })()
+        [0 || 'document'].getElementsByTagName(
+        'canvas')[0].getContext('2d');
+        return function(image, x, y, w, h) {
+            context.drawImage(image, x | 0, y | 0, w || image.width, h || image.height);
+        };
+    })();
+    var fastImageCentered = function(image, x, y, w, h) {
+        w = w || image.width;
+        h = h || image.height;
+        fastImage(image, x - w / 2, y - h / 2, w, h);
+    };
+    
+    /* Function to determine "Runner ID". */
+    var id = function() {
+        /* Choose from array of famous names */
+        var arr = [
+            "Aidabaida",
+            "IronMan44",
+            "#1B12P",
+            "Blue Leaf",
+            "Swax97",
+            "Kevin23",
+            "Ryan Kee",
+            "TempFuzz",
+            "Tegoon",
+        ];
+        var a = arr[Math.random() * arr.length | 0];
+        /* Add whitespace so that it will be drawn properly (return MUST be 9 chars) */
+        while (a.length < 9) {
+            a += " ";
+        }
+        return a;
+    };
+    /* Returns a string representation of the timer given amount of frames. So time(120) returns "0:02". */
+    var time = function(data) {
+        if (data < 0) { return '-' + time(-data); }
+        var minutes = data / 3600 | 0;
+        var seconds = ((data / 60) % 60).toFixed(2);
+        /* Tabs left with zeroes. */
+        if (seconds < 10) { seconds = "0" + seconds; }
+        if (minutes < 10) { minutes = "0" + minutes; }
+        return minutes + ":" + seconds;
+    };
+    /* Cache object. Stores Runner ID, stage, style, stage art, stage code, and current area name. */
+    var cache = {
+        stage: 0,
+        style: 0,
+        id: id(),
+        art: {
+            1:  function() {
+                rect(340, 290, 140, 50);
+                fill(192);
+                textAlign(CENTER, CENTER);
+                textSize(10);
+                text('100 FEET PAST CITY LIMIT.\nPLEASE RETURN TO THE CITY IMMEDIATELY.', 340, 290, 140, 50);
+            },
+            2:  function() {
+                rect(300, 120, 470, 140);
+                rect(640, 130, 100, 100);
+                textSize(20);
+                textAlign(LEFT, TOP);
+                fill(128, 128, 128);
+                text("ALERT: ESCAPED RUNNER", 320, 130);
+                fill(255, 255, 255);
+                textSize(9);
+                text("A RUNNER HAS ESCAPED FROM THE GOVERNMENT'S FLOW STUDY CENTER. ANY REPORT OF THE WHEREABOUTS OF THE ESCAPED RUNNER WILL BE REWARDED*.", 320, 160, 280, Infinity);
+                textAlign(CENTER, TOP);
+                text('RUNNER ID: ' + cache.id.toUpperCase(), 690, 235);
+                textAlign(LEFT, TOP);
+                fill(192, 192, 192);
+                textSize(6);
+                text("*PLEASE NOTE THAT UNDER STATUE (c)437.53 REWARDS FOR AID IN LAW ENFORCEMENT WILL ONLY BE DELIVERED IF THE LAW ENFORCEMENT GOAL IS NOT REACHED BEFORE 11/14/32. THE REWARD FOR AID IN LAW ENFORCEMENT CAN CHANGE AT ANY TIME, WITH OR WITHOUT NOTICE. THANK YOU FOR YOUR PATIENCE.", 320, 200, 280, Infinity);
+                noStroke();
+                colorMode(HSB);
+                fill(yourColor);
+                rect(660, 150, 60, 60);
+                colorMode(RGB);
+            },
+            3:  function() {
+                pushMatrix();
+                translate(300, -90);
+                rect(0, 280, 80, 35);
+                fill(192, 192, 192);
+                rect(20, 305, 40, 2);
+                triangle(20, 304, 20, 309, 15, 306.5);
+                textSize(8);
+                fill(192);
+                textAlign(CENTER, CENTER);
+                text("PLEASE RETURN\nTO THE CITY", 40, 292.5);
+                popMatrix();
+                fill(64);
+                stroke(192);
+                rect(760, 50, 500, 180);
+                fill(255);
+                textSize(21);
+                textAlign(CENTER, TOP);
+                text('ATTENTION LAW ENFORCEMENT OFFICERS', 1010, 60);
+                fill(128);
+                textSize(9);
+                textAlign(LEFT, TOP);
+                text('YOU ARE HEREBY GIVEN AUTHORIZATION TO DO WHATEVER IS IN YOUR POWER TO STOP THE THREAT LOOMING OVER THIS GREAT NATION. STATUE (c)439.68 GIVES YOU THE POWER TO KILL OR DEPORT ANY CIVILIAN THAT STANDS IN YOUR WAY. ANY OFFICER THAT CAPTURES OR KILLS THE ROGUE RUNNER WILL BE HANDSOMELY REWARDED.', 780, 90, 150, Infinity);
+                fill(196);
+                textFont(createFont('Arial Bold', 15));
+                text('PRECAUTIONARY OBSTACLES HAVE BEEN PLACED IN ORDER TO AID YOUR CAPTURE OF THE ROGUE RUNNER. PLEASE WATCH YOUR STEP, AS DEATH CAN OCCUR*.', 940, 90, 300, Infinity);
+                textSize(10);
+                text('* AND WHAT A SHAME THAT WOULD BE.', 940, 210, 300, Infinity);
+            },
+            7:  function() {
+                rect(300, 120, 360, 140);
+                rect(720, 260, 120, 60);
+                textSize(20);
+                textAlign(LEFT, TOP);
+                fill(128, 128, 128);
+                text("END OF RUNNER CAPTURE AREA", 320, 130);
+                fill(255, 255, 255);
+                textSize(9);
+                text("ANY OFFICER HERE SHOULD RETURN TO THE CITY IMMEDIATELY OR RISK LIQUIDIZATION. ANY CITIZEN HERE IS NOW DEEMED A MILITARY CLASS OFFENDER AND IS SUBJECT TO IMMEDIATE LIQUIDIZATION WITHOUT TRIAL*.", 320, 160, 320, Infinity);
+                textAlign(CENTER, CENTER);
+                text('MILITARY BASE A42-C\nNO ADMITTANCE\nWITHOUT PRIOR\nAUTHORIZATION', 720, 260, 120, 60);
+                textAlign(LEFT, TOP);
+                fill(192, 192, 192);
+                textSize(6);
+                text("*PLEASE NOTE THAT UNDER STATUE (c)438.24 MILITARY CLASS OFFENDERS ARE A RISK TO THE SECURITY OF THIS GREAT NATION. MILITARY CLASS OFFENDERS HAVE NO CIVIL RIGHTS AND MAY NOT DEFEND THEMSELVES FROM CAPTURE AND/OR MURDER. THANK YOU FOR YOUR PATIENCE.", 320, 210, 320, Infinity);
+            },
+            8:  function() {
+                rect(30, 50, 120, 240);
+                for (var i = 0; i < 4; i++) {
+                    rect(180, i * 80 + 40, 100, 30);
+                }
+                rect(810, 270, 120, 40);
+                textAlign(CENTER, CENTER);
+                fill(255);
+                textSize(15);
+                text('WELCOME TO MILITARY BASE A42-C', 30, 50, 120, 60);
+                textSize(10);
+                text('AIR FORCE\nPILOT HANGAR', 180, 40, 100, 30);
+                text('TACTICAL WARFARE\nCENTER', 180, 120, 100, 30);
+                text('TRAINING GROUNDS', 180, 200, 100, 30);
+                text('MAIN LOBBY', 180, 280, 100, 30);
+                text('RUNNER, YOU ARE NOW UNDER ARREST.', 810, 270, 120, 40);
+                fill(128);
+                textSize(8);
+                textAlign(LEFT, TOP);
+                text('CADETS SHOULD GO TO THE MAIN LOBBY THROUGH THE TELEPORTERS. ANY OFFICIAL MILITARY PERSONNEL SHOULD GO TO THEIR DESIGNATED AREAS BASED ON STANDARD PROTOCOL. IF YOU HAVE ANY QUESTIONS, PLEASE FEEL FREE TO ASK.', 35, 120, 110, Infinity);
+            },
+            9:  function() {
+                rect(60, 40, 500, 200);
+                rect(1200, 120, 240, 140);
+                fill(255, 0, 0);
+                textAlign(CENTER, TOP);
+                textSize(30);
+                text('WELCOME, RUNNER.', 310, 50);
+                fill(255);
+                textSize(18);
+                text('CORPSE DISPOSAL AREA', 1320, 130);
+                textSize(15);
+                textAlign(LEFT, TOP);
+                text('YOUR FLIGHT FROM OUR FACILITY IS IN DIRECT VIOLATION OF STATUE (c)441.14. PLEASE CONTINUE TO YOUR PUNISHMENT*.', 80, 100, 460, Infinity);
+                fill(128);
+                textSize(10);
+                text('* PUNISHMENTS MAY BE ADMINISTERED AT ANY TIME. THE CIRCUMSTANCES FOR ADMINISTERING A PUNISHMENT CAN CHANGE AT ANY TIME. ANY PUNISHMENT, REGARDLESS OF WHAT WAS SAID IN PREVIOUS ARTICLES, CAN BE ADMINISTERED AT ANY TIME. THANK YOU FOR YOUR PATIENCE.', 80, 160, 460, Infinity);
+                text('WELCOME, CORPSE DISPOSAL TEAM. PLEASE WATCH YOUR STEP AS DEATH CAN OCCUR. THANK YOU FOR COMPLYING WITH OUR MANDATORY RULES AND REGULATIONS. CONTINUE TO THE RIGHT TO EXIT.', 1220, 160, 200, Infinity);
+            },
+            10: function() {
+                rect(40, 220, 100, 50);
+                rect(620, 140, 300, 120);
+                fill(255);
+                noStroke();
+                textAlign(CENTER, TOP);
+                textSize(10);
+                text('CORPSE DISPOSAL AREA', 45, 225, 90, Infinity);
+                textSize(20);
+                text('WEAPON TESTING FACILITY', 770, 150);
+                triangle(50, 255, 60, 250, 60, 260);
+                rect(60, 254, 60, 2);
+                textSize(10);
+                textAlign(LEFT, TOP);
+                fill(196);
+                text('PLEASE DO NOT ENTER IF YOU ARE NOT A TESTER. SEVERAL OF THESE WEAPONS ARE FLOW-BASED AND MAY NOT FUNCTION NORMALLY WITHOUT SPECIAL PROTECTIVE GEAR. THANK YOU FOR YOUR COMPLIANCE.', 640, 180, 260, Infinity);
+            },
+            11: function() {
+                rect(10, 120, 220, 120);
+                rect(640, 230, 80, 40);
+                rect(880, 250, 40, 20);
+                rect(1470, 120, 340, 130);
+                fill(255);
+                noStroke();
+                textAlign(CENTER, TOP);
+                textSize(20);
+                text('FLOW BLOCK', 120, 130);
+                text('SPEEDRUN TEST', 1640, 130);
+                textSize(9);
+                textAlign(CENTER, CENTER);
+                text('DUCK!', 880, 250, 40, 20);
+                textSize(8);
+                text('ANTI-FLOW BLOCK', 680, 240);
+                textSize(6);
+                fill(196);
+                text('THIS BLOCK REMOVES FLOW FROM TESTERS. USEFUL IN EVENTS.', 642, 240, 76, 30);
+                textSize(10);
+                textAlign(LEFT, TOP);
+                text('OUR SCIENTISTS HAVE FIGURED OUT HOW TO TRANSFER FLOW TO ANYONE, BUT ONLY WITH SPECIAL FLOW GENERATORS. PLEASE MOVE ONTO THE FLOW BLOCK TO SEE THE EFFECTS, AND THEN JUMP ACROSS THE GAP WITH FLOW.', 20, 160, 200, Infinity);
+                text('PLEASE BEGIN A GOVERNMENT-SANCTIONED FIVE-SECTION SPEEDRUN TO TEST YOUR PROFICIENCY WITH OUR NEW WEAPONS. IF YOU FAIL TO COMPLETE THE SPEEDRUN WITHIN THREE MINUTES, YOU WILL BE REPLACED.', 1480, 160, 320, Infinity);
+            },
+            12: function() {
+                rect(50, 70, 200, 40);
+                textAlign(LEFT, TOP);
+                textSize(10);
+                fill(196);
+                text('Section 1 of 5', 55, 75);
+                fill(speedrunTimer < 0 ? -65536 : -3881788);
+                textAlign(CENTER, CENTER);
+                textSize(20);
+                text(time(speedrunTimer), 130, 65, 120, 40);
+            },
+            13: function() {
+                rect(50, 30, 200, 40);
+                textAlign(LEFT, TOP);
+                textSize(10);
+                fill(196);
+                text('Section 2 of 5', 55, 35);
+                fill(speedrunTimer < 0 ? -65536 : -3881788);
+                textAlign(CENTER, CENTER);
+                textSize(20);
+                text(time(speedrunTimer), 130, 25, 120, 40);
+            },
+            14: function() {
+                rect(50, 270, 200, 40);
+                textAlign(LEFT, TOP);
+                textSize(10);
+                fill(196);
+                text('Section 3 of 5', 55, 275);
+                fill(speedrunTimer < 0 ? -65536 : -3881788);
+                textAlign(CENTER, CENTER);
+                textSize(20);
+                text(time(speedrunTimer), 130, 265, 120, 40);
+            },
+            15: function() {
+                rect(30, 30, 200, 40);
+                textAlign(LEFT, TOP);
+                textSize(10);
+                fill(196);
+                text('Section 4 of 5', 35, 35);
+                fill(speedrunTimer < 0 ? -65536 : -3881788);
+                textAlign(CENTER, CENTER);
+                textSize(20);
+                text(time(speedrunTimer), 110, 25, 120, 40);
+            },
+            16: function() {
+                rect(30, 110, 200, 40);
+                textAlign(LEFT, TOP);
+                textSize(10);
+                fill(196);
+                text('Section 5 of 5', 35, 115);
+                fill(speedrunTimer < 0 ? -65536 : -3881788);
+                textAlign(CENTER, CENTER);
+                textSize(20);
+                text(time(speedrunTimer), 110, 105, 120, 40);
+            },
+            17: function() {
+                rect(50, 140, 300, 120);
+                fill(255);
+                noStroke();
+                textAlign(CENTER, TOP);
+                textSize(20);
+                text('YOUR TIME:', 200, 150);
+                textSize(35);
+                textAlign(CENTER, CENTER);
+                text(time(10800 - speedrunTimer), 50, 130, 300, 120);
+                textSize(10);
+                textAlign(LEFT, TOP);
+                fill(196);
+                text('PLEASE CONTINUE DOWN THE HALL TO YOUR REWARD.', 70, 230, 260, Infinity);
+            },
+            18: function() {
+                rect(50, 140, 500, 120);
+                fill(255, 0, 0);
+                noStroke();
+                textAlign(CENTER, TOP);
+                textSize(30);
+                text('RUNNER FOUND', 300, 150);
+                textSize(10);
+                textAlign(LEFT, TOP);
+                fill(255);
+                text('THE RUNNER HAS BEEN SECURED. ALL PERIMETERS ARE LOCKED. ANY PERSONNEL IN THE FACILITY WILL BE REPLACED. WE APOLOGIZE FOR ANY INCONVENIENCE* THIS MAY CAUSE YOU.', 70, 190, 460, Infinity);
+                fill(196);
+                textSize(8);
+                text('* INCONVENIENCES SHOULD BE REPORTED WITHIN STANDARD PROTOCOL, AS INITIATED IN STATUE (c)456.39. THANK YOU FOR YOUR COOPERATION.', 70, 230, 460, Infinity);
+            },
+            19: function() {
+                rect(50, 140, 260, 60);
+                fill(255, 0, 0);
+                noStroke();
+                textAlign(CENTER, CENTER);
+                textSize(20);
+                text('LOCKDOWN INITIATED', 50, 135, 260, 60);
+            },
+        },
+        stages: [
+            [
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '                                ■■■■■■■■■■■■■■■■■■■■■',
+                '                         ■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '  P             ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+            ],
+            [
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                ' P',
+                '■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+            ],
+            [
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '              ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '             ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '            ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '            ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '           ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '         ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                ' P   ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+            ],
+            [
+                '                                  ■',
+                '                                  ■',
+                '                                  ■',
+                '                                  ■',
+                '                                  ■',
+                '                          ■■■■■■  ■     ■',
+                '                       #          ■     ■',
+                '                                  ■     ■',
+                '   ■■■■■                    ■■■■■■■     ■',
+                '   !!!!!                      ',
+                '                                        #',
+                '                       #  ■■■■■■■■■',
+                '                                        ■',
+                '                                       ■■',
+                ' P              F    ■■■■■  ■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■□■■■■■■  !!!!!!!!!!!!■',
+                '■■■■■■■■■■■■#■■■■■■■■■■■■■    ',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■    ',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■    ',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■'
+            ],
+            [
+                '                              ',
+                '                              ',
+                '                              ',
+                '                           ■■ ',
+                '               ■■                              ■■',
+                '                      ■■       ■■        ■■',
+                '           ■■■                ',
+                '      ■■■                             ■■',
+                ' P ■                          ',
+                '■■■■                               ■■',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                'ꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛ',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■'
+            ],
+            [
+                '  ■    ■   ■  ■               ',
+                '  ■    ■   ■  ■               ',
+                '  ■    ■   ■  ■                          ■■■■',
+                '  ■    ■   ■  ■                          ■■■■',
+                '  ■    ■   ■  ■                          ■■■■',
+                '  ■    ■   ■  ■                          ■■■■',
+                '  ^    ■   ■  ■                          ■■■■',
+                '       ■   ^  ■                          ■■■■',
+                '       ■      ■                          ■■■■',
+                '       ^      ^                          ■■■■',
+                '                                         ■■■■',
+                ' P■        ■                             ■■■■',
+                ' ■■        ■                             ■■■■',
+                '  ■    ■   ■  .         F                ■■■■',
+                '  ■    ■   ■  ■  ■   #  ■■               ■■■■',
+                '..■....■...■..■..■......■■...□□..........■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■'
+            ],
+            [
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                                        ■■■■',
+                '                                     ■■■■■■■',
+                '                                   ■■■■■■■■■',
+                '                                  ■■■■■■■■■■',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                ' P                            ',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■'
+            ],
+            [
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '                 ■     |                                 ■',
+                '                 ■                                      ■  #',
+                '               4 ■ 4                                    ■',
+                '               ■■■■■■■■■■■■■■■■■■■■■■■■■■■              ■',
+                '                 ■     |                                ■',
+                '                 ■                                      ■  #',
+                '               3 ■ 3                                    ■',
+                '               ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■       ■',
+                '                 ■     |                                ■',
+                '                 ■                                      ■  #',
+                '               2 ■ 2                                    ■',
+                '               ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   ■',
+                '                 ■     |      ',
+                '                 ■            ',
+                ' P             1 ■ 1          ',
+                '■■■■■■■■■■□■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■'
+            ],
+            [
+                '                                    $   #   $       #  $^^^^^^^^^■■■■■■■■',
+                '                                               #                 ■■■■■■■■',
+                '                                                                 ■■■■■■■■',
+                '                                     #                           ■■■■■■■■',
+                '                                 $        #                      ■■■■■■■■',
+                '                              ',
+                '                              ',
+                '                                  $',
+                '                                      #',
+                '                              ',
+                '                                  $',
+                '                                                  #',
+                ' $ $ $ $ $ $ $ $ $ $ $ $ $ $ $ $ $                     #',
+                '                              ',
+                '                                              #            ■■■■■■■■■■■■■■',
+                '                                                           ^■■■■■■■■■■■■■',
+                '  P                                                 #       ^■■■■■■■■■■■■',
+                '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>□□   #             #   ^■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        $             ^■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                       ^■■■■■■■■■'
+            ],
+            [
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '  P                           ',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■     ■     ■     ■     ■     ■     ■     ■',
+                '■     ■     ■     ■     ■     ■     ■     ■',
+                '■     ■     ■     ■     ■     ■     ■     ■',
+                '■     ■     ■     ■     ■     ■     ■     ■',
+                '■     ■     ■     ■     ■     ■     ■     ■'
+            ],
+            [
+                '■■■■■■■■■■■■                  ',
+                '■■■■■■■■■■■■                  ',
+                '■■■■■■■■■■■■                  ',
+                '■■■■■■■■■■■■                  ',
+                '■■■■■■■■■■■■                  ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                                                U      U      U      U',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                ' P                                  F',
+                '■■■■■■■■■@■■                    ■■%■■■■     ■■     ■■     ■■     ■■     ■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■                    ■■■■■■■     ■■     ■■     ■■     ■■     ■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■                    ■■■■■■■     ■■     ■■     ■■     ■■     ■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■                    ■■■■■■■     ■■     ■■     ■■     ■■     ■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■                    ■■■■■■■     ■■     ■■     ■■     ■■     ■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■                    ■■■■■■■     ■■     ■■     ■■     ■■     ■■■■■■■■■■■■■■■■■■■■'
+            ],
+            [
+                '                                        ■■■■■■■■',
+                '                 ■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■       ꜜꜜꜜꜜꜜꜜꜜꜜꜜꜜꜜꜜꜜꜜ',
+                '                 ■       ꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛꜛ       {■',
+                '                 ■}  {■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                ' P               ■}  {■',
+                '■■■■■■■■■■■■■■■↣↢■}  {■',
+                '              ■↣↢■    ■',
+                '              ■↣↢■    ■',
+                '              ■↣↢■    ■',
+                '              ■↣↢■    ■',
+                '              ■↣↢■    ■',
+                '              ■↣↢■    ■',
+                '              ■↣↢■    ■',
+                '              ■↣↢■    ■',
+                '              ■↣↢■    ■',
+                '              ■    F  ■',
+                '              ■■■■■■■□■',
+                '',
+                ''
+            ],
+            [
+                '                      ■                    ■',
+                '                      ■                    ■',
+                '                      ■                    ■',
+                ' P          $    $  1 ■ 2                  ■',
+                '■■■■■■■■■■■  ■■■  ■■■■■■■■■■■■■■■■■       ■■',
+                '■     !!!!!  !!!  !!!!!!!!!!!!!!!         ■',
+                '■                                        ■■',
+                '■                                        ■',
+                '■                                     ■■■■',
+                '■1F        ..   ..                {■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■                             ',
+                '■      $  $  $  $             ',
+                '■                             ',
+                '■                             ',
+                '■                             ',
+                '■                             ',
+                '■                             ',
+                '■2F   ꜛꜛ ꜛꜛ ꜛ ꜛꜛꜛ   F         ',
+                '■■■■■□■■□■■□■□■■■□■■■■■■■■@■'
+            ],
+            [
+                '                                                                         ■■■■■■■■■■■■',
+                '                                                                         !!!!!!!!!!!!',
+                '                                                            {<<<<<}',
+                '                                                            {■   ■}',
+                '                                                    {<<<<<} {■   ■}',
+                '                              F     $               {■   ■} {■...■}',
+                '                            {■■■■■}         {>>>>>} {■   ■} {■■■■■}',
+                '                            {■   ■}         {■   ■} {■...■}  ^^■^^',
+                '                          # {■   ■} {>>>>>} {■   ■} {■■■■■}    ■                    ■',
+                '                            {■...■} {■   ■} {■...■}  ^^■^^     ■     ..   ..   .   .■',
+                '       U                    {■■■■■} {■   ■} {■■■■■}    ■       ■     ■■■■■■■■■■■■■■■■■■■■■',
+                '                             ^^■^^  {■...■}  ^^■^^     ■       ■      ■  ■  ■  ■  ■  ■  ■',
+                '                    #          ■    {■■■■■}    ■       ■       ■      ■  ■  ■  ■  ■  ■  ■',
+                '                               ■     ^^■^^     ■       ■       ■      ■  ■  ■  ■  ■  ■  ■',
+                '                               ■       ■       ■       ■       ■      ■  ■  ■  ■  ■  ■  ■',
+                ' P                             ■       ■       ■       ■       ■      ■  ■  ■  ■  ■  ■  ■',
+                '■■■■■■■■■■■■■■□}               ■       ■       ■       ■       ■      ■  ■  ■  ■  ■  ■  ■',
+                '  ■  ■  ■  ■                   ■       ■       ■       ■       ■      ■  ■  ■  ■  ■  ■  ■',
+                '  ■  ■  ■  ■                   ■       ■       ■       ■       ■      ■  ■  ■  ■  ■  ■  ■',
+                '  ■  ■  ■  ■                   ■       ■       ■       ■       ■      ■  ■  ■  ■  ■  ■  ■'
+            ],
+            [
+                '                            ■■■■■                                                         ■',
+                '                            !!!!!                                                         ■',
+                '                                                                                          ■',
+                '  P                                                                                       ■',
+                '■■■■■■■■■■■■  $                     ■■■■■                                                 ■',
+                '                 $        $         !!!!!                                                 ■',
+                '                                                                                          ■',
+                '                   ■■■■■    ■■■■■',
+                '                     ■        ■             ■■■■■',
+                '                     ■        ■   $         !!!!!                                   ..  ..',
+                '                     ■        ■                                                     ■■■■■■■',
+                '                     ■        ■     ■■■■■                                             ■■',
+                '                     ■        ■       ■                                               ■■',
+                '                     ■        ■       ■   $                                           ■■',
+                '                     ■        ■       ■                                               ■■',
+                '                     ■        ■       ■     ■■■■■                                     ■■',
+                '                     ■        ■       ■       ■   $  F    $                           ■■',
+                '                     ■        ■       ■       ■     ■■■■    >>>>  <<<< {□□□□}         ■■',
+                '                     ■        ■       ■       ■     ■  ■    ■  ■  ■  ■ {■■■■}         ■■',
+                '                     ■        ■       ■       ■     ■  ■    ■  ■  ■  ■ {■■■■}         ■■'
+            ],
+            [
+                '                      ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '                      !!!!!!!!!!!!!!!!!    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                ' P                            ',
+                '■■■■■■■■■■■■■                 ',
+                '            ■■                                    U     U     U',
+                '             ■■               ',
+                '              ■■              ',
+                '               ■■                     ■',
+                '                ■■                    ■',
+                '                 ■■               ■   ■',
+                '                  ■■    ■   ■     ■   ■ F  ■   ■     ■     ■',
+                '                   ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  # ■■■■',
+                '                              ',
+                '                              ',
+                '                              '
+            ],
+            [
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                ' P                         ',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '   ■   ■   ■   ■   ■   ■   ■',
+                '   ■   ■   ■   ■   ■   ■   ■',
+                '   ■   ■   ■   ■   ■   ■   ■',
+                '   ■   ■   ■   ■   ■   ■   ■'
+            ],
+            [
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                '                           ',
+                ' P                         ',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '   ■   ■   ■   ■   ■   ■   ■',
+                '   ■   ■   ■   ■   ■   ■   ■',
+                '   ■   ■   ■   ■   ■   ■   ■',
+                '   ■   ■   ■   ■   ■   ■   ■'
+            ],
+            [
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                                ■■■■■■■■■■',
+                '                                ■ $■ $■ $■',
+                '                                ■  ■  ■  ■■■■',
+                '                    U       U ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                ■       ■       ■ $■ $■ $■■■■',
+                '         P      ■..   ..■..   ..■  ■  ■  ■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              ',
+                '                              '
+            ],
+            [
+                '■■■■■■■■■■■■■                   ',
+                '            !                   ',
+                '                   U     U     U     U',
+                '                              ',
+                '                              ',
+                '                                            ■■■■',
+                '                                               ■',
+                '                                               ■',
+                '                                             1 ■',
+                '            ■>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>■■■■',
+                '            ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '            ■       ■       !!!!!!!!!!!!!!!!!!!!',
+                '            ■       ■           ',
+                '            ■       ■ 1         ',
+                '            ■       ■■■■■@■■<<<<<<<<<<<<<<<<<<<<■■',
+                '            ■       ■           ',
+                '            ■       ■           ',
+                '        P   ■       ■           ',
+                '■■■■■■■■■■■□■       ■           ',
+                '■■■■■■■■■■■■■       ■           '
+            ],
+        ],
+        messages: {
+            1: 'Fugitive',
+            4: 'Obstacles from Freedom',
+            7: 'Military Base',
+            9: 'The Trap',
+            10: 'New Weapons',
+            12: 'The Speedrun',
+            17: 'Rewards',
+            18: 'Runner Found',
+        },
+        helpStages: [
+            [
+                '■',
+                '■',
+                '■',
+                '■',
+                '■',
+                '■',
+                '■',
+                '■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■       ■',
+                '■       ■',
+                '■       ■',
+                '■       ',
+                '■ P',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+                '■',
+                '■',
+                '■',
+                '■',
+                '■'
+            ],
+            [
+                '■■                               ■■■',
+                '■■                               ■■■',
+                '■■                               ■■■',
+                '■■                               ■■■',
+                '■■                               ■■■',
+                '■■                               ■■■',
+                '■■                               ■■■',
+                '■■                               ¯¯■',
+                '■■                     ■■■■■■■■■■■ ■',
+                '■■P    ■■              ■■■■■■■■■■■ ■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ ■',
+                '■■■    ■■      ■■      ■■       ■■ ■',
+                '■■■    ■■      ■■      ■■       ■■ ■',
+                '■■■    ■■      ■■      ■■       ■■ ■',
+                '■■■    ■■      ■■      ■■       ■■ ■',
+                '■■■    ■■      ■■      ■■       ■■ ■',
+                '■■■    ■■      ■■      ■■       ■■ ■',
+                '■■■    ■■      ■■      ■■       ■■',
+                '■■■    ■■      ■■      ■■       ■■■■■■■■■■■',
+                '■■■    ■■      ■■      ■■       ■■■■■■■■■■■'
+            ],
+            [
+                '                           ■■■■                ■■■■■',
+                '                           ■■■■                ■■■■■',
+                '                           ■■■■                ■■■■■',
+                '                           ■■■■                ■■■■■',
+                '                           ■■■■                ■   ■',
+                '                           ■■■■                ■   ■',
+                '                           ■■■■                ■ ■ ■',
+                '                           ■■■■                ■ ■ ■',
+                '                           ■■■■                ■ ■ ■■■■■■■■■■■■■■■■■■■',
+                '                           ■■■■                ■ ■ ■',
+                '                           ■■■■                ■ ■ ■',
+                '                           ■■■■                ■ ■ ■',
+                '                           ■■■■                ■ ■ ■       ■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ ■ ■      ■■■■■■■■■■■■',
+                '■ P                                              ■ ■     ■■■■■■■■■■■■■',
+                '■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ ■ ■    ■■■■■■■■■■■■■■',
+                '                           ■■■■                ■ ■ ■   ■■■■■■■■■■■■■■■',
+                '                           ■■■■                ■ ■    ■■■■■■■■■■■■■■■■',
+                '                           ■■■■        ■■■■■■■■■ ■■■■■■■■■■■■■■■■■■■■■',
+                '                           ■■■■        ■■■■■■■■■□■■■■■■■■■■■■■■■■■■■■■'
+            ]
+        ],
+        helpArt: {
+            1: function() {
+                fill(96, 96, 96);
+                stroke(128, 128, 128);
+                strokeWeight(1);
+                rect(345, 200, 110, 40);
+                textFont(createFont("Arial"), 10);
+                textAlign(CENTER, CENTER);
+                fill(230, 230, 230);
+                rect(390, 203, 20, 20);
+                rect(412, 212, 25, 5);
+                rect(363, 212, 25, 5);
+                noStroke();
+                triangle(353, 215, 364, 205, 364, 224);
+                triangle(447, 215, 436, 205, 436, 224);
+                text("A/D or LEFT/RIGHT", 400, 230);
+            },
+            2: function() {
+                fill(96, 96, 96);
+                stroke(128, 128, 128);
+                strokeWeight(1);
+                rect(80, 110, 310, 35);
+                rect(507, 110, 110, 35);
+                fill(230, 230, 230);
+                textFont(createFont("Arial"), 9);
+                textAlign(LEFT, TOP);
+                text("UP OR W TO JUMP", 95, 130);
+                text("HOLD LONGER TO JUMP HIGHER", 240, 130);
+                text("S OR DOWN TO SLIDE", 515, 130);
+                fill(230, 230, 230);
+                noStroke();
+                rect(140, 113.5, 15, 15);
+                rect(130, 118, 3, 11);
+                rect(525, 113.5, 15, 15);
+                rect(545, 120, 25, 3);
+                rect(590, 121, 15, 7.5);
+                rect(590, 113, 15, 4);
+                triangle(126.5, 118, 131.5, 113, 136.5, 118);
+                triangle(570, 116.5, 580, 121.5, 570, 126.5);
+                pushMatrix();
+                translate(140, 0);
+                for (var i = 1; i < 4; i++) {
+                    translate(30, 0);
+                    fill(230, 230, 230, i * 100);
+                    rect(140, 113.5, 15, 15);
+                    rect(130, 118, 3, 11);
+                    triangle(126.5, 118, 131.5, 113, 136.5, 118);
+                }
+                popMatrix();
+            },
+            3: function() {
+                fill(96, 96, 96);
+                stroke(128, 128, 128);
+                strokeWeight(1);
+                rect(25, 215, 430, 35);
+                rect(865, 50, 55, 175);
+                rect(1210, 200, 125, 30);
+                rect(1432, 200, 95, 30);
+                noStroke();
+                fill(255, 0, 0);
+                rect(1475, 202.5, 15, 15);
+                fill(128, 128, 128);
+                rect(1300, 202.5, 15, 15);
+                fill(230, 230, 230);
+                rect(30, 220, 15, 15);
+                rect(1235, 202.5, 15, 15);
+                rect(1255, 209, 35, 3);
+                triangle(1290, 206, 1290, 215, 1295, 210.5);
+                textFont(createFont("Arial"), 9);
+                textAlign(LEFT, TOP);
+                text("RUN", 30, 240);
+                text("ARE YOU READY?", 1215, 220);
+                textAlign(CENTER, TOP);
+                text("HOLD UP\nTO JUMP\nHIGHER", 892, 190);
+                textAlign(RIGHT, TOP);
+                text("PUSH SPACE OR SHIFT", 450, 240);
+                rect(895, 55, 15, 15);
+                rect(880, 65, 5, 115);
+                rect(50, 225, 300, 5);
+                triangle(350, 222.5, 350, 232.5, 360, 227.5);
+                triangle(877.5, 65, 882.5, 60, 887.5, 65);
+                pushMatrix();
+                translate(360, 5);
+                for (var i = 0; i < 3; i++) {
+                    fill(230, 230, 230, i * 50 + 50);
+                    translate(20, 0);
+                    rect(0, 215, 15, 15);
+                }
+                popMatrix();
+            },
+        },
+        helping: false,
+        bestTime: Program.bestTime || Infinity
+    };
+    
+    /* When to use Crusher of Doom. */
+    var useCOD = cache.stage >= 19 && cache.stage <= 21;
+    
+    /* Trims excess whitespace in stage generation. */
+    (function() {
+        var i = cache.stages.length,
+            reExcess = / +$/;
+        while (i--) {
+            var stage = cache.stages[i],
+                rowIndex = stage.length;
+            while (rowIndex--) {
+                stage[rowIndex] = stage[rowIndex].replace(reExcess, '');
+            }
+        }
+    })();
+    
+    /* Button function because I'm to lazy to make an object. It takes either three parameters or five parameters. If it takes five parameters, it will display the alternate text if the condition evaluates to false. */
+    var button = function(x, y, txt, txt2, condition) {
+        if (!txt2) { txt2 = txt; }
+        textFont(createFont('Arial Bold'), 12);
+        var b = {
+            x: x,
+            y: y,
+            w: textWidth(condition ? txt : txt2),
+            h: 12
+        };
+        fill(196, 196, 196);
+        if (mouse.over(b) && !mouse.out) {
+            cursor(HAND);
+            fill(255, 255, 255);
+        }
+        textAlign(LEFT, TOP);
+        text(condition ? txt : txt2, x, y);
+        return mouse.clicking(b);
+    };
+    /* Similar to button(). */
+    var menuButton = function(txt, x, y, w, h) {
+        var mouseOver = mouse.over(x, y, w, h);
+        stroke(64);
+        strokeWeight(3);
+        fill(32);
+        if (mouseOver) {
+            cursor(HAND);
+            fill(48);
+            x += 2;
+            y += 2;
+            if (mouseIsPressed) {
+                x++; y++;
+                fill(64);
+            }
+        }
+        rect(x, y, w, h, 10);
+        strokeWeight(1);
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        fill(255);
+        text(txt + '', x, y - 5, w, h);
+        return mouseOver && mouse.click;
+    };
+    
+    /* Display function fetches loaded images from the Program object. */
+    var display = function(imageID, x, y, w, h) {
+        if (arguments.length === 2) {
+            fastImage(Program[imageID], x.x, x.y, x.w, x.h);
+            return;
+        }
+        fastImage(Program[imageID], x, y, w, h);
+    };
+    var displayCentered = function(imageID, x, y, w, h) {
+        if (arguments.length === 2) {
+            fastImageCentered(Program[imageID], x.x, x.y, x.w, x.h);
+            return;
+        }
+        fastImageCentered(Program[imageID], x, y, w, h);
+    };
+    
+    /* Rect-circle collision. */
+    var RCInt = function(rect, circle) {
+        /* Distance between rect and circle. */
+        var rw = rect.w / 2,
+            rh = rect.h / 2,
+            cr = circle.r,
+            distX = Math.abs(circle.x - rect.x - rw),
+            distY = Math.abs(circle.y - rect.y - rh);
+        
+        /* If rect is out of the smallest rectangle around the circle, we're done, it's false for sure. */
+        if (distX > rw + cr) { return false; }
+        if (distY > rh + cr) { return false; }
+    
+        /* If circle is inside the biggest circle that fits in the rectangle, it's true for sure. */
+        if (distX <= rw) { return true; } 
+        if (distY <= rh) { return true; }
+        
+        /* Okay, fine, use the Pythagorean Theorem. */
+        var dx = distX - rw;
+        var dy = distY - rh;
+        return dx * dx + dy * dy <= cr * cr;
+    };
+    /* Rect-rect collision. */
+    var RRInt = function(rect1, rect2) {
+        /* Standard KA rect/rect collision. */
+        return rect1.x < rect2.x + rect2.w &&
+               rect1.x + rect1.w > rect2.x &&
+               rect1.y < rect2.y + rect2.h &&
+               rect1.y + rect1.h > rect2.y;
+    };
+    
+    var blocks = [], fixtures = [], player, lens;
+    var Block = function(x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    var flowblocks = [];
+    var Particle = function(x, y, vx, vy, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color || -16711936;
+    };
+    var FlowBlock = function(x, y) {
+        this.x = x;
+        this.y = y;
+        this.particles = [];
+        
+        this.draw = function() {
+            this.animation = constrain(this.animation, 0, 60);
+            if (this.animation > 0) {
+                displayCentered('flow-block-halo', this.x + this.w / 2, this.y + this.h / 2, this.animation * 2, this.animation * 2);
+                this.particles.push(new Particle(this.x + random(this.w), this.y + random(this.h), random(-1, 1), random(-1, 1)));
+            }
+            var i = this.particles.length;
+            while (i--) {
+                var p = this.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 5;
+                p.draw();
+                if (p.life < 0) { this.particles.splice(i, 1); }
+            }
+            if (!lens.view(this)) { return; }
+            fill(0, 255, 0, 100 + 155 * this.animation / 60);
+            noStroke();
+            rect(this.x, this.y, this.w, this.h);
+            display('flow-block', this);
+        };
+    };
+    var InParticle = function(x, y, displacement, speed, color) {
+        this.gx = x;
+        this.gy = y;
+        var randX = (Math.random() - 0.5) * displacement << 1,
+            randY = (Math.random() - 0.5) * Math.sqrt(displacement * displacement - randX * randX) << 1;
+        this.x = x + randX;
+        this.y = y + randY;
+        this.vx = (this.gx - this.x) * speed;
+        this.vy = (this.gy - this.y) * speed;
+        this.color = color || -65536;
+    };
+    var antiblocks = [];
+    var AntiBlock = function(x, y) {
+        this.x = x;
+        this.y = y;
+        this.particles = [];
+        
+        this.draw = function() {
+            this.animation = constrain(this.animation, 0, 60);
+            if (this.animation > 0) {
+                displayCentered('anti-block-halo', this.x + this.w / 2, this.y + this.h / 2, this.animation * 2, this.animation * 2);
+                this.particles.push(new InParticle(this.x + this.w / 2, this.y + this.h / 2, 50, 0.05));
+            }
+            var i = this.particles.length;
+            while (i--) {
+                var p = this.particles[i];
+                p.update();
+                p.draw();
+                if (!p.life) { this.particles.splice(i, 1); }
+            }
+            if (!lens.view(this)) { return; }
+            fill(255, 0, 0, 100 + 155 * this.animation / 60);
+            noStroke();
+            rect(this.x, this.y, this.w, this.h);
+            display('anti-block', this);
+        };
+    };
+    var bouncers = [];
+    var Bouncer = function(x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    var flags = [];
+    var Flag = function(x, y) {
+        this.x = x + 17.5;
+        this.y = y - 80;
+        this.h = 100;
+        
+        this.draw = function() {
+            if (this.complete) {
+                this.animation += 10;
+                this.animation = peg(this.animation);
+                if (lens.view({ x: x + 10, y: 0, w: 20, h: 400 })) {
+                    display('flag-gradient', x + 10, y - 80 - this.animation, 20, this.animation);
+                }
+                var a = this.animation / 255 * 30;
+                fill(yourColor);
+                noStroke();
+                var x20 = x + 20,
+                    y55 = y - 55,
+                    y75 = y - 75,
+                    sinFC = Math.sin(frameCount * Math.TAU / 180) * 5;
+                beginShape();
+                vertex(x20, y75);
+                bezierVertex(x20, y75, x20 + a / 2, y75 + 2 * sinFC, x20 + a, y75 + sinFC);
+                bezierVertex(x20 + a, y75 + sinFC, x20 + a, y75 + sinFC, x20 + a, y75);
+                bezierVertex(x20 + a, y55, x20 + a, y55 + sinFC, x20 + a, y55 + sinFC);
+                bezierVertex(x20 + a, y55 + sinFC, x20 + a / 2, y55 + sinFC * 2, x20, y55);
+                vertex(x20, y55);
+                endShape();
+            }
+            display('flag', x, y - 80, 40, 100);
+        };
+    };
+    var wheels = [];
+    var Wheel = function(x, y, r) {
+        this.x = x;
+        this.y = y;
+        this.r = r;
+    };
+    var pendulums = [];
+    var Pendulum = function(x, y, l, r) {
+        this.origin = { x: x + 10, y: y + 10 };
+        this.length = l;
+    
+        this.angle = 90;
+        this.v = 0;
+        this.a = 0;
+        this.r = r - 2;
+        blocks.push(new Block(x, y));
+        
+        this.draw = function() {
+            this.x = this.length * sin(this.angle) + this.origin.x;
+            this.y = this.length * cos(this.angle) + this.origin.y;
+            stroke(212);
+            strokeWeight(1);
+            line(this.x, this.y, this.origin.x, this.origin.y);
+            pushMatrix();
+            translate(this.origin.x, this.origin.y);
+            rotate(this.angle);
+            displayCentered('pendulum-origin', 0, 0, 10, 10);
+            popMatrix();
+            pushMatrix();
+            translate(this.x, this.y);
+            rotate(-frameCount * 1.5);
+            displayCentered('wheel', 0, 0, this.r * 4, this.r * 4);
+            popMatrix();
+        };
+        
+        this.update = function() {
+            this.a = (-0.2 / this.length) * sin(this.angle);
+            this.v += this.a;
+            this.angle += this.v * 5;
+        };
+    };
+    var movers = [];
+    var Mover = function(x, y, align) {
+        this.x = x;
+        this.y = y;
+        this.align = align;
+        
+        this.draw = function() {
+            if (!lens.view(this)) { return; }
+            if (this.align === LEFT) {
+                display('mover-left', this);
+            }
+            if (this.align === RIGHT) {
+                display('mover-right', this);
+            }
+        };
+    };
+    var crushers = [];
+    var Crusher = function(x, y) {
+        /* Original y position */
+        this.oy = y;
+        this.x = x + 5;
+        this.y = y;
+        this.h = 2;
+        /* Fallback stop position is 400 */
+        this.stop = 400;
+    };
+    var droppers = [];
+    var Dropper = function(x, y) {
+        //Original y position
+        this.x = x;
+        this.y = y;
+        this.h = 0;
+        
+        this.vy = 0;
+        //Fallback stop position is 400
+        this.stop = 400;
+        
+        this.initialize = function(BLOs) {
+            /* Loop through array of BLOs to find BLO to stop at */
+            for (var i = 0; i < BLOs.length; i++) {
+                var BLO = BLOs[i];
+                /* Check if BLO and this have same x position */
+                if (BLO.x !== this.x) { continue; }
+                /* We are looking for the closest BLO that has a y greater
+                than our original y, so continue if BLO does not fit our
+                specifications*/
+                if (BLO.y > this.stop) { continue; }
+                if (BLO.y < this.y) { continue; }
+                /* If closest, set new stop position */
+                this.stop = BLO.y;
+            }
+        };
+        
+        this.draw = function() {
+            if (!lens.view(this)) { return; }
+            if (this.h) {
+                fill(128);
+                stroke(196);
+                strokeWeight(1);
+                rect(this.x, this.y, this.w, this.h);
+            }
+        };
+        
+        this.update = function() {
+            //If player intersects a bit past this dropper's y slice, make it fall!
+            if (RRInt(player, { x: this.x + 80, y: 0, w: this.w, h : 400 })) {
+                this.falling = true;
+            }
+            //If dropper has hit stop location, bounce
+            if (this.h >= this.stop - this.y) {
+                this.vy = -this.vy / 3;
+            }
+            //Handles speed
+            if (this.falling) {
+                this.vy += 0.2;
+                this.h += this.vy;
+            }
+            //Keep height within constraints
+            this.h = constrain(this.h, 0, this.stop - this.y);
+        };
+    };
+    var spikes = [];
+    /* 4 direction constructors for both static and dynamic spikes, 8 all together. Whew! */
+    {
+    var spikeDownCounter = 0,
+        spikeUpCounter = 0,
+        spikeLeftCounter = 0,
+        spikeRightCounter = 0;
+    var SpikeDynamicDown = function(x, y) {
+        this.time = spikeDownCounter * 3;
+        spikeDownCounter++;
+        this.x = x + 2; /* Spike's hitbox is sligtly smaller than the spike image.*/
+        this.y = y + 20;
+        this.w = 16;
+        this.h = 19;
+        this.up = false;
+        
+        this.top = {
+            x: this.x,
+            y: this.y - 19
+        };
+        
+        this.bottom = {
+            x: this.x,
+            y: this.y
+        };
+        
+        this.draw = function() {
+            /* Checks whether spike is "up" or not */
+            this.up = (timer - this.time) % 180 <= 90;
+            this.y += this.up ? -2 : 2;
+            this.y = constrain(this.y, this.top.y, this.bottom.y);
+            if (!lens.view(this)) { return; }
+            display('spike-dynamic-down', this.x - 2, this.y, this.w + 4, this.h);
+        };
+    };
+    var SpikeDynamicUp = function(x, y) {
+        this.time = spikeUpCounter * 3;
+        spikeUpCounter++;
+        this.x = x + 2; /* Spike's hitbox is sligtly smaller than the spike image.*/
+        this.y = y;
+        this.w = 16;
+        this.h = 19;
+        this.up = false;
+        
+        this.top = {
+            x: this.x,
+            y: this.y - 19
+        };
+        
+        this.bottom = {
+            x: this.x,
+            y: this.y
+        };
+        
+        this.draw = function() {
+            /* Checks whether spike is "up" or not */
+            this.up = (timer - this.time) % 180 <= 90;
+            this.y += this.up ? 2 : -2;
+            this.y = constrain(this.y, this.top.y, this.bottom.y);
+            if (!lens.view(this)) { return; }
+            display('spike-dynamic-up', this.x - 2, this.y, this.w + 4, this.h);
+        };
+    };
+    var SpikeDynamicLeft = function(x, y) {
+        this.time = spikeLeftCounter * 3;
+        spikeLeftCounter++;
+        this.x = x - 20; /* Spike's hitbox is sligtly smaller than the spike image.*/
+        this.y = y + 2;
+        this.w = 19;
+        this.h = 16;
+        this.up = false;
+        
+        this.left = {
+            x: this.x,
+            y: this.y
+        };
+        
+        this.right = {
+            x: this.x + 19,
+            y: this.y
+        };
+        
+        this.draw = function() {
+            /* Checks whether spike is "up" or not */
+            this.up = (timer - this.time) % 180 <= 90;
+            this.x += this.up ? 2 : -2;
+            this.x = constrain(this.x, this.left.x, this.right.x);
+            if (!lens.view(this)) { return; }
+            display('spike-dynamic-left', this.x, this.y - 2, this.w, this.h + 4);
+        };
+    };
+    var SpikeDynamicRight = function(x, y) {
+        this.time = spikeRightCounter * 3;
+        spikeRightCounter++;
+        this.x = x + 20; /* Spike's hitbox is sligtly smaller than the spike image.*/
+        this.y = y + 2;
+        this.w = 19;
+        this.h = 16;
+        this.up = false;
+        
+        this.left = {
+            x: this.x - 19,
+            y: this.y
+        };
+        
+        this.right = {
+            x: this.x,
+            y: this.y
+        };
+        
+        this.draw = function() {
+            /* Checks whether spike is "up" or not */
+            this.up = (timer - this.time) % 180 <= 90;
+            this.x += this.up ? -2 : 2;
+            this.x = constrain(this.x, this.left.x, this.right.x);
+            if (!lens.view(this)) { return; }
+            display('spike-dynamic-right', this.x, this.y - 2, this.w, this.h + 4);
+        };
+    };
+    var SpikeStaticUp = function(x, y) {
+        this.x = x + 2;
+        this.y = y;
+        this.w = 16;
+        this.h = 2;
+        
+        this.draw = function() {
+            display('spike-static-up', this.x - 2, this.y, this.w + 4, this.h + 8);
+        };
+    };
+    var SpikeStaticDown = function(x, y) {
+        this.x = x + 2;
+        this.y = y + 18;
+        this.w = 16;
+        this.h = 2;
+        
+        this.draw = function() {
+            display('spike-static-down', this.x - 2, this.y - 8, this.w + 4, this.h + 8);
+        };
+    };
+    var SpikeStaticLeft = function(x, y) {
+        this.x = x;
+        this.y = y + 2;
+        this.w = 8;
+        this.h = 16;
+        
+        this.draw = function() {
+            display('spike-static-left', this.x, this.y - 2, this.w + 2, this.h + 4);
+        };
+    };
+    var SpikeStaticRight = function(x, y) {
+        this.x = x + 12;
+        this.y = y + 2;
+        this.w = 8;
+        this.h = 16;
+        
+        this.draw = function() {
+            display('spike-static-right', this.x - 2, this.y - 2, this.w + 2, this.h + 4);
+        };
+    };
+    }
+    var teleporters = [], teleporterIdCounter = 0;
+    var Teleporter = function(x, y, sync) {
+        this.x = x;
+        this.y = y - 10;
+        this.w = 20;
+        this.h = 30;
+        /* Number to link to */
+        this.sync = sync;
+        /* Unique ID for each teleporter */
+        this.id = teleporterIdCounter;
+        teleporterIdCounter++;
+        this.animation = 0;
+        this.image = 'teleporter-' + cache.style;
+        switch (this.sync) {
+            case 1: this.color = -65536; break;
+            case 2: this.color = -256; break;
+            case 3: this.color = -16711936; break;
+            case 4: this.color = -16776961; break;
+        }
+        this.playerIsIn = false; /* This frame */
+        this.playerWasIn = false; /* Last frame */
+        
+        this.initialize = function() {
+            /* Loop through array of teleporters */
+            for (var i = 0; i < teleporters.length; i++) {
+                var tp = teleporters[i];
+                /* Find sister teleporter */
+                if (tp.sync === this.sync &&
+                    tp.id !== this.id) {
+                    /* Set teleportation coordinates */
+                    this.tx = tp.x;
+                    this.ty = tp.y + 10;
+                    /* Save that teleporter's array index for later use */
+                    this.alt = i;
+                    /* Break the loop */
+                    return;
+                }
+            }
+            /* If cannot find a teleporter to sync to, just teleport player to last checkpoint. (Effectively "kills" player.) */
+            this.tx = player.start.x - 40;
+            this.ty = player.start.y;
+        };
+        
+        this.draw = function() {
+            if (this.animation) {
+                noStroke();
+                /* Bit shifting is faster than red(), green(), and blue(). */
+                fill(this.color >> 16 & 0xFF, this.color >> 8 & 0xFF, this.color & 0xFF, this.animation * 5);
+                rect(this.x, 0, this.w, this.y + this.h);
+            }
+            if (!lens.view(this)) { return; }
+            display(this.image, this);
+        };
+        
+        this.update = function() {
+            //Handles animation
+            this.animation--;
+            this.animation = constrain(this.animation, 0, Infinity);
+        };
+        
+        this.valueOf = function() {
+            return 'TP #' + this.id;
+        };
+    };
+    var Self = function(x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    var Piece = function(x, y) {
+        this.x = x;
+        this.y = y;
+        /* Gives pieces some variety. */
+        this.w = random(2, 4);
+        this.h = random(2, 4);
+        this.vx = random(-1, 1);
+        this.vy = random(-1, 1);
+        /* Lifetime varies. */
+        this.life = random(250, 350);
+        /* When to optimize performance. */
+        this.optimize = false;
+    };
+    var Player = function(x, y) {
+        /* Properties. */
+        // {
+        /* Checkpoint position */
+        this.start = { x: x, y: y };
+        /* Normal position */
+        this.x = x;
+        this.y = y;
+        /* When stage is complete */
+        this.complete = Infinity;
+        /* Velocity */
+        this.vx = 0;
+        this.vy = 0;
+        /* Width and height */
+        this.w = 20;
+        this.h = 20;
+        /* Jumping? */
+        this.jumping = false;
+        /* Bouncing? */
+        this.bouncing = false;
+        /* Speed */
+        this.speed = 3.5;
+        /* Amount of flow */
+        this.flowAmount = 0;
+        /* Flow threshhold */
+        this.threshhold = 20;
+        /* Flowing? */
+        this.flowing = false;
+        /* Particles */
+        this.selves = [];
+        this.particles = [];
+        this.pieces = [];
+        this.deaths = 0;
+        /* Special bug case. */
+        this.TPHalfFrameReset = false;
+        /* Keys and flow getters */
+        Object.defineProperties(this, {
+            left: {
+                get: function() {
+                    return keys[LEFT] || keys.a;
+                }
+            },
+            right: {
+                get: function() {
+                    return keys[RIGHT] || keys.d;
+                }
+            },
+            up: {
+                get: function() {
+                    return keys[UP] || keys.w;
+                }
+            },
+            down: {
+                get: function() {
+                    return (keys[DOWN] || keys.s) && !this.jumping;
+                }
+            },
+            canFlow: {
+                get: function() {
+                    return this.flowAmount >
+                    this.threshhold || this.flowing;
+                }
+            },
+            flow: {
+                get: function() {
+                    return this.canFlow && (keys[SHIFT] || keys[' ']);
+                }
+            },
+        });
+        // }
+        
+        this.applyCollisions = function(vx, vy) {
+            /* Arguably the most important function in the game. Called 120 times per second, and is over 200 lines long. */
+            /* Handles the Crusher of Doom. */
+            if (this.x <= crusherOfDoom + 20 && useCOD) {
+                this.reset();
+            }
+            var i = bouncers.length;
+            while (i--) {
+                var bouncer = bouncers[i];
+                if (!RRInt(bouncer, this)) { continue; }
+                if (vy < 0) {
+                    this.vy = 0;
+                    this.y = bouncer.y + 20;
+                } //From bottom
+                if (vy >= 0) {
+                    this.y = bouncer.y - this.h;
+                    this.vy = this.up ? -10.55 : -6;
+                    this.jumping = true;
+                    this.bouncing = true;
+                    bouncer.animation = 20;
+                } //From top
+            }
+            i = movers.length;
+            while (i--) {
+                var mover = movers[i];
+                if (!RRInt(this, mover)) { continue; }
+                /* Works movers. */
+                if (mover.align === LEFT) {
+                    this.x--;
+                }
+                if (mover.align === RIGHT) {
+                    this.x++;
+                }
+                /* Now to reposition. */
+                if (vx < 0) {
+                    this.x = mover.x + 20;
+                    this.vx = 0;
+                }
+                if (vx > 0) {
+                    this.x = mover.x - this.w;
+                    this.vx = 0;
+                }
+                if (vy < 0) {
+                    this.y = mover.y + 20;
+                    this.vy = 0;
+                }
+                if (vy > 0) {
+                    this.y = mover.y - this.h;
+                    this.vy = 0;
+                    this.jumping = false;
+                    this.bouncing = false;
+                }
+            }
+            i = crushers.length;
+            while (i--) {
+                if (!RRInt(crushers[i], this)) { continue; }
+                this.reset();
+            }
+            i = flowblocks.length;
+            while (i--) {
+                var flowblock = flowblocks[i];
+                if (!RRInt(this, flowblock)) {
+                    flowblock.animation -= 0.5;
+                    continue;
+                }
+                flowblock.animation = 60;
+                this.flowAmount += 5;
+                if (vx < 0) {
+                    this.x = flowblock.x + 20;
+                    this.vx = 0;
+                }
+                if (vx > 0) {
+                    this.x = flowblock.x - this.w;
+                    this.vx = 0;
+                }
+                if (vy < 0) {
+                    this.y = flowblock.y + 20;
+                    this.vy = 0;
+                }
+                if (vy > 0) {
+                    this.y = flowblock.y - this.h;
+                    this.vy = 0;
+                    this.jumping = false;
+                    this.bouncing = false;
+                }
+            }
+            i = antiblocks.length;
+            while (i--) {
+                var antiblock = antiblocks[i];
+                if (!RRInt(this, antiblock)) {
+                    antiblock.animation -= 0.5;
+                    continue;
+                }
+                antiblock.animation = 60;
+                this.flowAmount = 0;
+                if (vx < 0) {
+                    this.x = antiblock.x + 20;
+                    this.vx = 0;
+                }
+                if (vx > 0) {
+                    this.x = antiblock.x - this.w;
+                    this.vx = 0;
+                }
+                if (vy < 0) {
+                    this.y = antiblock.y + 20;
+                    this.vy = 0;
+                }
+                if (vy > 0) {
+                    this.y = antiblock.y - this.h;
+                    this.vy = 0;
+                    this.jumping = false;
+                    this.bouncing = false;
+                }
+            }
+            i = blocks.length;
+            while (i--) {
+                var block = blocks[i];
+                if (!RRInt(this, block)) { continue; }
+                if (vx < 0) {
+                    this.vx = 0;
+                    this.x = block.x + 20;
+                }
+                if (vx > 0) {
+                    this.vx = 0;
+                    this.x = block.x - this.w;
+                }
+                if (vy < 0) {
+                    this.vy = 0;
+                    this.y = block.y + 20;
+                }
+                if (vy > 0) {
+                    this.vy = 0;
+                    this.y = block.y - this.h;
+                    this.jumping = false;
+                    this.bouncing = false;
+                }
+            }
+            i = droppers.length;
+            while (i--) {
+                var dropper = droppers[i];
+                if (!RRInt(this, dropper)) { continue; }
+                if (vx < 0) {
+                    this.x = dropper.x + 5;
+                    this.vx = 0;
+                }
+                if (vx > 0) {
+                    this.x = dropper.x - this.w;
+                    this.vx = 0;
+                }
+                if (vy < 0) {
+                    this.y = dropper.y + dropper.h;
+                    this.vy = 0;
+                }
+                if (vy > 0) {
+                    this.y = dropper.y - this.h;
+                    this.vy = 0;
+                    this.jumping = false;
+                    this.bouncing = false;
+                }
+            }
+            i = flags.length;
+            while (i--) {
+                var flag = flags[i];
+                if (!RRInt(this, flag)) { continue; }
+                this.start.x = flag.x - 7.5;
+                this.start.y = flag.y + 80;
+                flag.complete = true;
+            }
+            i = wheels.length;
+            while (i--) {
+                RCInt(this, wheels[i]) && this.reset(); // jshint ignore: line
+            }
+            i = pendulums.length;
+            while (i--) {
+                if (!RCInt(this.down ? { x: this.x + 8, y: this.y + 20, w: this.w - 16, h: this.h - 20 } : this, pendulums[i])) { continue; }
+                this.reset();
+            }
+            i = spikes.length;
+            while (i--) {
+                /* Even though the spikes vary tremendously, they all fit into one broad category. */
+                RRInt(spikes[i], this) && this.reset(); // jshint ignore: line
+            }
+            i = teleporters.length;
+            while (i--) {
+                /* Update the teleporter's playerIn status */
+                teleporters[i].playerWasIn = teleporters[i].playerIsIn;
+                /* If we are not touching, then tell that to the teleporter. */
+                if (!RRInt(teleporters[i], this)) {
+                    teleporters[i].playerIsIn = false;
+                    continue;
+                }
+                /* So we are definitely touching. Check the sister teleporter's status to see if we can teleport */
+                teleporters[i].playerIsIn = true;
+                if (!teleporters[i].playerWasIn && teleporters[i].playerIsIn && !teleporters[teleporters[i].alt].playerWasIn && !teleporters[teleporters[i].alt].playerIsIn) {
+                    teleporters[i].animation = 30;
+                    /* This is in a try/catch block so that if the sync in the teleporter's initialization didn't work, we won't call a function of undefined */
+                    try {
+                        teleporters[teleporters[i].alt].animation = 30;
+                        teleporters[teleporters[i].alt].playerWasIn = true;
+                    }
+                    catch (e) {}
+                    /* Set new x and y, but leave velocity alone. */
+                    this.x = teleporters[i].tx;
+                    this.y = teleporters[i].ty;
+                    this.JT = true;
+                    break;
+                }
+            }
+        };
+        
+        /* Draws player */
+        this.draw = function() {
+            colorMode(HSB);
+            if (this.flow) {
+                this.selves.push(new Self(this.x, this.y));
+                this.particles.push(
+                    new Particle(
+                        this.x + this.w / 2,
+                        random(this.y, this.y + this.h),
+                        -this.vx / 5,
+                        random(-1, 1),
+                        yourColor));
+                fill(0, 0, 255);
+                noStroke();
+                rect(this.x, this.y + (this.down ? this.h / 2 : 0), this.w, this.h - (this.down ? this.h / 2 : 0));
+            }
+            else {
+                noStroke();
+                fill(yourColor);
+                rect(this.x, this.y + (this.down ? this.h / 2 : 0), this.w, this.h - (this.down ? this.h / 2 : 0));
+            }
+            var i = this.pieces.length;
+            if (reduceLag && i > 10) {
+                i = 10;
+                this.pieces.splice(10);
+            }
+            while (i--) {
+                var piece = this.pieces[i];
+                piece.draw();
+                piece.update();
+                if (piece.life <= 0) { this.pieces.splice(i, 1); }
+            }
+            colorMode(RGB);
+        };
+        
+        /* Updates player */
+        this.update = function() {
+            if (this.y > 400) { this.reset(); }
+            if (this.left) {
+                this.vx -= 0.3;
+                if (!this.flowing) {
+                    this.flowAmount += 0.23;
+                }
+            }
+            else if (this.right) {
+                this.vx += 0.3;
+                if (!this.flowing) {
+                    this.flowAmount += 0.23;
+                }
+            }
+            /* Slow down if no left or right */
+            if (!this.left && !this.right) {
+                this.vx *= 0.8;
+            }
+            if (!(this.vx | 0) && !this.flow) { 
+                this.flowAmount -= 2.5;
+            }
+            if (this.flow && this.flowAmount > 1) {
+                this.flowAmount -= 0.5;
+                this.flowing = true;
+            }
+            else {
+                this.flowing = false;
+            }
+            if (this.up && !this.jumping && !this.down) {
+                this.vy -= 3;
+            }
+            if (this.up && this.vy < 0 && !this.bouncing) {
+                this.vy -= 0.11;
+            }
+            if (this.down) {
+                this.speed *= 0.95;
+            }
+            else {
+                this.speed = 3.5;
+            }
+            this.vx = constrain(this.vx, -this.speed * (this.flow ? 3 : 1), this.speed * (this.flow ? 3 : 1));
+            this.jumping = true;
+            this.x += this.vx;
+            this.applyCollisions(this.vx, 0);
+            if (!this.JT) {
+                this.y += this.vy;
+            }
+            this.JT = false;
+            this.applyCollisions(0, this.vy);
+            this.vy += 0.2;
+            var i = this.selves.length;
+            var fs = 'rgba(255, 255, 255, ',
+                lx = -lens.x;
+            while (i--) {
+                var self = this.selves[i],
+                    sx = self.x;
+                if ((self.life -= 1.5) <= 0) {
+                    this.selves.splice(i, 1);
+                    continue;
+                }
+                if (sx + 20 <= lx || lx + 600 <= sx) {
+                    continue;
+                }
+                cx.fillStyle = fs + (self.life / 255) + ')';
+                cx.fillRect(sx, self.y, 20, 20);
+            }
+            this.flowAmount = constrain(this.flowAmount, 0, this.threshhold * 4);
+            if (this.x >= this.complete) {
+                cache.load();
+            }
+            i = this.particles.length;
+            if (!i) { return; }
+            /*
+            Use bit shifting instead of the red(),
+            green(), and blue() functions.
+            */
+            fs = 'rgba(' +
+                (yourColor >> 16 & 0xFF) + ', ' +
+                (yourColor >> 8 & 0xFF) + ', ' +
+                (yourColor & 0xFF) + ', ';
+            while (i--) {
+                var p = this.particles[i];
+                cx.fillStyle = fs + ((p.life -= 5) / 255) + ')';
+                cx.fillRect((p.x += p.vx) - 2, (p.y += p.vy) - 2, 5, 5);
+                if (p.life <= 0) { this.particles.splice(i, 1); }
+            }
+        };
+        
+        /* Resets player values on death or new stage */
+        this.reset = function(alive) {
+            if (!alive) {
+                this.deaths++;
+                if (usage < 85) {
+                    for (var i = 0; i < random(5, 10); i++) {
+                        this.pieces.push(new Piece(this.x + random(this.w), this.y + random(this.h)));
+                    }
+                }
+            }
+            this.x = this.start.x;
+            this.y = this.start.y;
+            this.vx = 0;
+            this.vy = 0;
+            this.flowAmount = 0;
+            crusherOfDoom = 0;
+            if (alive) { this.selves = []; }
+        };
+    };
+    var popups = [];
+    var Popup = function(x, y, txt, size, time) {
+        this.life = 255;
+        
+        this.draw = function() {
+            noStroke();
+            fill(255, 255, 255, this.life);
+            textAlign(CENTER, CENTER);
+            pushMatrix();
+            translate(x, y);
+            scale(1 + Math.sin((255 - this.life) / 255));
+            textSize(size);
+            text(txt, 0, 0);
+            popMatrix();
+            this.life -= 255 / time;
+        };
+    };
+    var popup = function(txt, x, y, size, time) {
+        popups.push(new Popup(x, y, txt, size, time));
+    };
+    /* Setting some prototype values. */
+    (function() {
+        /* Set some default widths and heights. */
+        Block.prototype.w = Block.prototype.h = Bouncer.prototype.w = Bouncer.prototype.h = FlowBlock.prototype.w = FlowBlock.prototype.h = AntiBlock.prototype.w = AntiBlock.prototype.h = Mover.prototype.w = Mover.prototype.h = 20;
+        Flag.prototype.w = Dropper.prototype.w = 5;
+        /* Set default animation states. */
+        Bouncer.prototype.animation = FlowBlock.prototype.animation = AntiBlock.prototype.animation = Flag.prototype.animation = 0;
+        /* Set particle prototypes. */
+        Particle.prototype = {
+            life: 255,
+            draw: function() {
+                /* Use bit shifting instead of the red(), green(), and blue() functions. */
+                var c = this.color;
+                fill(c >> 16 & 0xFF, c >> 8 & 0xFF, c & 0xFF, this.life);
+                noStroke();
+                rect(this.x - 2, this.y - 2, 5, 5);
+            },
+        };
+        InParticle.prototype = {
+            life: 1,
+            draw: function() {
+                noStroke(); /* Use bit shifting instead of the red(), green(), and blue() functions. */
+                var c = this.color;
+                fill(c >> 16 & 0xFF, c >> 8 & 0xFF, c & 0xFF, 255 - dist(this.x, this.y, this.gx, this.gy));
+                rect(this.x - 2.5, this.y - 2.5, 5, 5);
+            },
+            update: function() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (dist(this.x, this.y, this.gx, this.gy) < 5) {
+                    this.life = 0;
+                }
+            }
+        };
+        Self.prototype = {
+            life: 128
+        };
+        /* Set crusher prototype. */
+        Crusher.prototype = {
+            w: 10,
+            initialize: function(BLOs) {
+                /* Loop through array of BLOs to find BLO to stop at */
+                for (var i = 0; i < BLOs.length; i++) {
+                    var BLO = BLOs[i];
+                    /* Check if BLO and this have same x position */
+                    if (BLO.x !== this.x - 5) { continue; }
+                    /* We are looking for the closest BLO that has a y greater
+                    than our original y, so continue if BLO does not fit our
+                    specifications*/
+                    if (BLO.y > this.stop) { continue; }
+                    if (BLO.y < this.y) { continue; }
+                    /* If closest, set new stop position */
+                    this.stop = BLO.y;
+                }
+            },
+            draw: function() {
+                if (this.y > this.oy) {
+                    display('crusher-top', this.x - 5, this.oy, this.w + 10, this.y - this.oy);
+                }
+                display('crusher', this.x - 5, this.y, this.w + 10, this.h + 20);
+            },
+            update: function() {
+            /* If player intersects this crusher's y slice, make it fall! */
+            if (RRInt(player, { x: this.x, y: 0, w: this.w, h : 400 })) {
+                this.falling = true;
+            }
+            /* If crusher has hit stop location, stop falling */
+            if (this.y + this.h + 18 >= this.stop) {
+                this.falling = false;
+            }
+            /* Handles speed */
+            if (this.falling) {
+                this.y += 3;
+            }
+            else {
+                this.y--;
+            }
+            //Keep y within constraints
+            this.y = constrain(this.y, this.oy, this.stop - this.h - 18);
+        },
+        };
+        /* Set Piece prototype. */
+        Piece.prototype = {
+            draw: function() {
+                if (!lens.view(this)) { return; }
+                colorMode(HSB);
+                fill(hue(yourColor), saturation(yourColor), brightness(yourColor), this.life);
+                noStroke();
+                rect(this.x, this.y, this.w, this.h);
+                colorMode(RGB);
+            },
+            applyCollisions: function(vx, vy) {
+                var i = bouncers.length;
+                while (i--) {
+                    var bouncer = bouncers[i];
+                    if (!RRInt(bouncer, this)) { continue; }
+                    if (vx < 0) {
+                        this.x = bouncer.x + 20;
+                        this.vx *= -1 / 3;
+                    }
+                    if (vx > 0) {
+                        this.x = bouncer.x - this.w;
+                        this.vx *= -1 / 3;
+                    }
+                    if (vy < 0) {
+                        this.y = bouncer.y + 20;
+                        this.vy *= -1 / 3;
+                    }
+                    if (vy > 0) {
+                        this.y = bouncer.y - this.h;
+                        this.vy *= -1;
+                        bouncer.animation = 5;
+                    }
+                }
+                i = movers.length;
+                while (i--) {
+                    var mover = movers[i];
+                    if (!RRInt(this, mover)) { continue; }
+                    /* Works movers. */
+                    if (mover.align === LEFT) {
+                        this.x--;
+                    }
+                    if (mover.align === RIGHT) {
+                        this.x++;
+                    }
+                    /* Now to reposition. */
+                    if (vx < 0) {
+                        this.x = mover.x + 20;
+                        this.vx *= -1 / 3;
+                    }
+                    if (vx > 0) {
+                        this.x = mover.x - this.w;
+                        this.vx *= -1 / 3;
+                    }
+                    if (vy < 0) {
+                        this.y = mover.y + 20;
+                        this.vy *= -1 / 3;
+                        this.vx *= 0.8;
+                    }
+                    if (vy > 0) {
+                        this.y = mover.y - this.h;
+                        this.vy *= -1 / 3;
+                        this.vx *= 0.8;
+                        this.jumping = false;
+                        this.bouncing = false;
+                    }
+                }
+                var BLOs = blocks.concat(flowblocks, antiblocks);
+                i = BLOs.length;
+                while (i--) {
+                    var block = BLOs[i];
+                    if (!RRInt(this, block)) { continue; }
+                    if (vx < 0) {
+                        this.vx *= -1 / 3;
+                        this.x = block.x + 20;
+                    }
+                    if (vx > 0) {
+                        this.vx *= -1 / 3;
+                        this.x = block.x - this.w;
+                    }
+                    if (vy < 0) {
+                        this.vy *= -1 / 3;
+                        this.vx *= 0.8;
+                        this.y = block.y + 20;
+                    }
+                    if (vy > 0) {
+                        this.vy *= -1 / 3;
+                        this.vx *= 0.8;
+                        this.y = block.y - this.h;
+                    }
+                }
+            },
+            update: function() {
+                this.life -= usage > 90 ? 1 : 2;
+                /* Sets piece up to be removed if it is below the bottom of the screen. */
+                if (this.optimize) { return; }
+                this.x += this.vx;
+                this.applyCollisions(this.vx, 0);
+                this.y += this.vy;
+                this.vy += 0.2;
+                this.applyCollisions(0, this.vy);
+                this.optimize = this.vx | 0 && this.vy | 0;
+            },
+        };
+        /* Set wheel draw function. */
+        Wheel.prototype.draw = function() {
+            if (!lens.view(this)) { return; }
+            pushMatrix();
+            translate(this.x, this.y);
+            rotate(-frameCount * 1.5);
+            displayCentered(cache.stage === 9 ? 'wheel-dark' : 'wheel', 0, 0, this.r * 3, this.r * 3);
+            popMatrix();
+        };
+        /* Set bouncer draw function. */
+        Bouncer.prototype.draw = function() {
+            if (!lens.view(this)) { return; }
+            if (this.animation > 0) { this.animation -= 1.1; }
+            this.animation = constrain(this.animation, 0, 20);
+            stroke(255, 255, 0);
+            strokeWeight(1);
+            /* Lines to keep the top from flying off */
+            line(this.x, this.y + 2, this.x + this.w - 1, this.y - this.animation / 1.8 - 2);
+            stroke(255, 128, 0);
+            line(this.x + this.w, this.y + 2, this.x + 1, this.y - this.animation / 1.8 - 2);
+            display('bouncer-top', this.x, this.y - this.animation / 1.8 - 5, 20, 5);
+            display('bouncer', this.x, this.y, this.w, 20);
+        };
+        /* */
+        cx = (function() { return this; })()
+        [0 || 'document'].getElementsByTagName(
+        'canvas')[0].getContext('2d');
+    })();
+    player = new Player(0, 0);
+    lens = {
+        x: 300 - player.x,
+        right: -Infinity,
+        left: -crusherOfDoom,
+        apply: function(amount) {
+            /* Applies lens */
+            translate(this.x * amount, 0);
+        },
+        get display() {
+            /* Returns an area object containing the lens dimensions */
+            return {
+                x: -this.x,
+                y: 0,
+                w: 600,
+                h: 400
+            };
+        },
+        view: function(that) {
+            //Returns if the lens can see the object
+            var d = this.display;
+            if (that instanceof Wheel) {
+                return RCInt(d, { x: that.x, y: that.y, r: that.r * 1.5 });
+            }
+            var tx = that.x, dx = d.x;
+            return tx + that.w >= dx && tx <= dx + 600;
+        },
+    };
+    /* Clears all game arrays. */
+    cache.clear = function() {
+        /* Clear EVERYTHING!!! */
+        blocks = [];
+        fixtures = [];
+        wheels = [];
+        flags = [];
+        pendulums = [];
+        crushers = [];
+        bouncers = [];
+        flowblocks = [];
+        antiblocks = [];
+        spikes = [];
+        teleporters = [];
+        droppers = [];
+        movers = [];
+        spikeDownCounter = 0;
+        spikeUpCounter = 0;
+        spikeLeftCounter = 0;
+        spikeRightCounter = 0;
+        teleporterIdCounter = 0;
+        /* Reset the Crusher Of Doom */
+        crusherOfDoom = 0;
+    };
+    cache.load = function(stage) {
+        this.clear(); /* Clear everything. */
+        player.reset(true); /* Reset player values. */
+        if (this.helping && !this.helpStages[this.stage]) {
+            timer = 0;
+            frameCount = 0;
+            this.stage = 0;
+            this.style = 0;
+            player.deaths = 0;
+            state = 'menu';
+            this.helping = false;
+            return;
+        }
+        if (!this.stages[this.stage] && !stage) {
+            Program.bestTime = (this.bestTime = this.bestTime < timer ? this.bestTime : timer);
+            timer = 0;
+            frameCount = 0;
+            speedrunTimer = 10800;
+            this.stage = 0;
+            this.style = 0;
+            player.deaths = 0;
+            state = 'menu';
+            this.helping = false;
+            return;
+        }
+        /* Used to find the longest string in the stage. More on that later. */
+        var longest = 0;
+        /* The next stage. We're updating the style first so it'll register with the blocks we're about to make. */
+        /*
+        Styles:
+        0: Medium Dark
+        1: Dark
+        2: Medium Bright
+        */
+        var f = stage ? 0 : this.stage + 1;
+        if (f >= 8) {
+            this.style = 1;
+        }
+        Block.image = Program['block-' + this.style];
+        /* Loop through rows... */
+        var currentStage = stage || (this.helping ? this.helpStages : this.stages)[this.stage],
+            currentStageLength = currentStage.length,
+            reBLO = /[■□<>@%]/;
+        for (var row = 0; row < currentStageLength; row++) {
+            var currentRow = currentStage[row].split(''),
+                currentRowLength = currentRow.length,
+                /* Optimizing x20s. Yep. */
+                row20 = row * 20,
+                /* For fixture checks. */
+                isLastRow = row === currentStageLength - 1;
+            /* Find longest row... */
+            if (currentRowLength > longest) {
+                longest = currentRowLength;
+            }
+            /* Loop through columns... */
+            for (var col = 0; col < currentRowLength; col++) {
+                /* Character currently being parsed in stage grid. */
+                var currentGridPoint = currentRow[col];
+                /* Quickly go to next if point is whitespace. */
+                if (currentGridPoint === ' ') { continue; }
+                /* Now to figure out what to push, and where. */
+                switch (currentGridPoint) {
+                    case '■':
+                        /* Check if current grid point is a "fixture". */
+                    var lastGridPoint = currentRow[col - 1],
+                        nextGridPoint = currentRow[col + 1],
+                        upperGridPoint = (currentStage[row - 1] ||
+                                         '').charAt(col),
+                        lowerGridPoint = (currentStage[row + 1] ||
+                                         '').charAt(col);
+                        if (
+                            reBLO.test(lastGridPoint) &&
+                            reBLO.test(nextGridPoint) &&
+                            reBLO.test(upperGridPoint) &&
+                            (isLastRow ||
+                            reBLO.test(lowerGridPoint))
+                        ) {
+                            /* If so, we can optimize! Yay! */
+                            fixtures.push(new Block(col * 20, row20));
+                            break;
+                        }
+                        blocks.push(new Block(col * 20, row20));
+                    break;
+                    case '@':
+                        flowblocks.push(new FlowBlock(col * 20, row20));
+                    break;
+                    case '%':
+                        antiblocks.push(new AntiBlock(col * 20, row20));
+                    break;
+                    case 'U':
+                        pendulums.push(new Pendulum(col * 20, row20, 90, 10));
+                    break;
+                    case 'P':
+                        /* Resets the player and lens.  */
+                        player.start.x = col * 20;
+                        player.start.y = row20;
+                        player.reset(true);
+                    break;
+                    case 'F':
+                        flags.push(new Flag(col * 20, row20));
+                    break;
+                    case '#':
+                        wheels.push(new Wheel(col * 20, row20 + 10, 40));
+                    break;
+                    case '□':
+                        bouncers.push(new Bouncer(col * 20, row20));
+                    break;
+                    case '!':
+                        crushers.push(new Crusher(col * 20, row20));
+                    break;
+                    case 'ꜛ':
+                        spikes.push(new SpikeDynamicDown(col * 20, row20));
+                    break;
+                    case 'ꜜ':
+                        spikes.push(new SpikeDynamicUp(col * 20, row20));
+                    break;
+                    case '↢':
+                        spikes.push(new SpikeDynamicRight(col * 20, row20));
+                    break;
+                    case '↣':
+                        spikes.push(new SpikeDynamicLeft(col * 20, row20));
+                    break;
+                    case '^':
+                        spikes.push(new SpikeStaticUp(col * 20, row20));
+                    break;
+                    case '.':
+                        spikes.push(new SpikeStaticDown(col * 20, row20));
+                    break;
+                    case '}':
+                        spikes.push(new SpikeStaticLeft(col * 20, row20));
+                    break;
+                    case '{':
+                        spikes.push(new SpikeStaticRight(col * 20, row20));
+                    break;
+                    case "$":
+                        wheels.push(new Wheel(col * 20, row20 + 30, 20));
+                    break;
+                    case '|':
+                        droppers.push(new Dropper(col * 20, row20));
+                    break;
+                    case '>':
+                        movers.push(new Mover(col * 20, row20, RIGHT));
+                    break;
+                    case '<':
+                        movers.push(new Mover(col * 20, row20, LEFT));
+                    break;
+                    case '1':
+                        teleporters.push(new Teleporter(col * 20, row20, 1));
+                    break;
+                    case '2':
+                        teleporters.push(new Teleporter(col * 20, row20, 2));
+                    break;
+                    case '3':
+                        teleporters.push(new Teleporter(col * 20, row20, 3));
+                    break;
+                    case '4':
+                        teleporters.push(new Teleporter(col * 20, row20, 4));
+                    break;
+                }
+            }
+        }
+        /* Initialize the objects that need initialization. */
+        /* Gets all "block-like objects". */
+        var BLOs = blocks.concat(bouncers, movers, flowblocks, antiblocks);
+        /* Init crushers since they need to find closest block below them to be their maximum fall point */
+        for (var i = 0; i < crushers.length; i++) {
+            crushers[i].initialize(BLOs);
+        }
+        /* Init teleporters so they can hook up with their appropriate sister teleporters */
+        for (var i = 0; i < teleporters.length; i++) {
+            teleporters[i].initialize();
+        }
+        /* Init droppers since they need to find closest block below them to be their maximum fall point */
+        for (var i = 0; i < droppers.length; i++) {
+            droppers[i].initialize(BLOs);
+        }
+        
+        /* WOOT! NEW STAGE! */
+        this.stage++;
+        /* Update useCOD variable */
+        useCOD = cache.stage >= 19 && cache.stage <= 21;
+        /* Calculates lens ending. If level isn't long enough to fill the screen, defaults it so that the lens will not move. */
+        lens.right = Math.min(longest * -20 + 600, 0);
+        /* Sets lens start point */
+        lens.x = 300 - player.x;
+        /* Calculate when the player passes the level */
+        player.complete = longest * 20;
+        /* Reset cool white screen burst thingy */
+        this.transparency = 255;
+        /* Clear pieces of player and any residual particles. */
+        player.selves = [];
+        player.pieces = [];
+        player.particles = [];
+    };
+    frameCount = 0;
+    var loadScreen = function() {
+        var currentImage = imageArray[frameCount];
+        if (!currentImage || typeof Program[currentImage.key] === 'object') {
+            frameRate(60);
+            frameCount = 0;
+            state = 'logo';
+            return;
+        }
+        background(0, 0, 0, 0);
+        pushStyle();
+        Program[currentImage.key] = currentImage();
+        popStyle();
+        background(255);
+        textFont(createFont('Trebuchet MS Bold'), 20);
+        textSize(30);
+        textAlign(CENTER, CENTER);
+        fill(0);
+        text('Loading ' + currentImage.key + '...', 300, 100);
+        textSize(60);
+        text((frameCount * 100 / imageArray.length).toFixed(0) + '%', 300, 250);
+        noStroke();
+        pushMatrix();
+        translate(300, 250);
+        rotate(frameCount * 3);
+        for (var i = 0; i <= 12; i++) {
+            var xPos = 100 * Math.cos(i * Math.TAU / 12),
+                yPos = 100 * Math.sin(i * Math.TAU / 12);
+            ellipse(xPos, yPos, 15, 15);
+        }
+        popMatrix();
+    };
+    var logo = function(w) {
+        noStroke();
+        background(255, 255, 255);
+        textAlign(LEFT, CENTER);
+        textFont(createFont("Trebuchet MS Bold"), 50);
+        fill(0, 0, 0, min(frameCount, 200));
+        rect(frameCount * 3, 80, 600, 10);
+        rect(0, 100, w - frameCount * 3, 10);
+        rect(20, 0, 10, frameCount * 3 - 150);
+        rect(w - 40, 0, 10, frameCount * 3 - 150);
+        var heading = "Lionofgd";
+        for (var i = 0; i < name.length; i++) {
+            fill(0, 0, 0, min(frameCount - 10 * i, 200));
+            text(heading.charAt(i), w / 2 - textWidth(heading) / 2 + textWidth(heading.substring(0, i)), 150);
+        }
+        textSize(80);
+        var subtitle = "Games";
+        for (var i = 0; i < name.length; i++) {
+            fill(0, 0, 0, min(frameCount - 10 * i - 85, 200));
+            text(subtitle.charAt(i), w / 2 - textWidth(subtitle) / 2 + textWidth(subtitle.substring(0, i)), 230);
+        }
+        if (frameCount > 300 || mouse.click) {
+            frameCount = 0;
+            mouse.click = false;
+            state = 'menu';
+            textFont(createFont('Arial Bold'));
+        }
+    };
+    var menu = function() {
+        background(64);
+        display('city-background', frameCount % 800 - 200, 146, 200, 175);
+        display('city-background', (frameCount + 200) % 800 - 200, 146, 200, 175);
+        display('city-background', (frameCount + 400) % 800 - 200, 146, 200, 175);
+        display('city-background', (frameCount + 600) % 800 - 200, 146, 200, 175);
+        display('city-foreground', (frameCount % 500) * 2 - 400, 72, 400, 328);
+        display('city-foreground', ((frameCount + 200) % 500) * 2 - 400, 72, 400, 328);
+        display('city-foreground', ((frameCount + 400) % 500) * 2 - 400, 72, 400, 328);
+        textSize(50);
+        textAlign(CENTER, TOP);
+        fill(196);
+        text('EXIT PATH 2', 298, 28);
+        fill(255);
+        text('EXIT PATH 2', 300, 30);
+        textSize(20);
+        fill(196);
+        text('PART 1', 298, 78);
+        fill(255);
+        text('PART 1', 300, 80);
+        if (cache.bestTime !== Infinity) {
+            var t = time(cache.bestTime);
+            pushMatrix();
+            translate(300, 135 + Math.sin(frameCount / 20) * 10);
+            rotate(Math.sin(frameCount / 10) * 5);
+            textSize(30);
+            fill(255);
+            text('New Best: ' + t + '!', 0, 0);
+            popMatrix();
+        }
+        textAlign(LEFT, BOTTOM);
+        textSize(10);
+        text('By Lionofgd', 5, 395);
+        textFont(createFont('Trebuchet MS Bold'));
+        if (menuButton('PLAY', 200, 230, 200, 40)) {
+            frameCount = 0;
+            timer = 0;
+            speedrunTimer = 10800;
+            cache.stage = 0;
+            cache.load();
+            state = 'exitPath2';
+        }
+        if (menuButton('HOW TO PLAY', 200, 280, 200, 40)) {
+            frameCount = 0;
+            cache.helping = true;
+            cache.stage = 0;
+            cache.load();
+            state = 'exitPath2';
+        }
+        if (menuButton('HIGH SCORES', 200, 330, 200, 40)) {
+            mouse.click = false;
+            state = 'highScores';
+        }
+        textFont(createFont('Arial Bold'));
+    };
+    
+    var scores = [];
+    
+    var highScores = function() {
+        background(64);
+        display('city-background', frameCount % 800 - 200, 146, 200, 175);
+        display('city-background', (frameCount + 200) % 800 - 200, 146, 200, 175);
+        display('city-background', (frameCount + 400) % 800 - 200, 146, 200, 175);
+        display('city-background', (frameCount + 600) % 800 - 200, 146, 200, 175);
+        display('city-foreground', (frameCount % 500) * 2 - 400, 72, 400, 328);
+        display('city-foreground', ((frameCount + 200) % 500) * 2 - 400, 72, 400, 328);
+        display('city-foreground', ((frameCount + 400) % 500) * 2 - 400, 72, 400, 328);
+        textAlign(LEFT, BOTTOM);
+        textSize(10);
+        text('By Lionofgd', 5, 395);
+        stroke(64);
+        strokeWeight(3);
+        fill(32);
+        rect(100, 50, 400, 250, 10);
+        fill(196);
+        textAlign(LEFT, TOP);
+        textSize(12);
+        for (var i = 1; i <= 5; i++) {
+            var s = scores[i - 1];
+            if (s) {
+                text(i + ': ' + s.name + ' (' + s.score + ')', 120, 40 + 45 * i);
+            }
+            else {
+                text(i + ': ---AVAILABLE---', 120, 40 + 45 * i);
+            }
+        }
+        for (var i = 6; i <= 10; i++) {
+            var s = scores[i - 1];
+            if (s) {
+                text(i + ': ' + s.name + ' (' + s.score + ')', 320, 40 + 45 * (i - 5));
+            }
+            else {
+                text(i + ': ---AVAILABLE---', 320, 40 + 45 * (i - 5));
+            }
+        }
+        if (menuButton('BACK', 200, 330, 200, 40)) {
+            state = 'menu';
+        }
+    };
+    
+    var score = function(name, amount) {
+        scores.push({ name: name, score: amount });
+    };
+    
+    var initializeScores = function() {
+        scores.sort(function(a, b) {
+            var as = a.score,
+                ai = as.indexOf(':'),
+                bs = b.score,
+                bi = bs.indexOf(':');
+            
+            return (as.substr(0, ai) + as.substr(ai + 1)) -
+                   (bs.substr(0, bi) + bs.substr(bi + 1));
+        });
+        scores.splice(10);
+    };
+    
+    var exitPath2 = function() {
+        /* Background and timers */
+        //{
+        var t1 = millis();
+        if (requestNewFlagGradient) {
+            background(0, 0, 0, 0);
+            pushStyle();
+            Program['flag-gradient'] = images['flag-gradient']();
+            popStyle();
+            requestNewFlagGradient = false;
+        }
+        background(0, 0, 0);
+        if ((frameCount > 240 || cache.stage !== 1) && !paused) {
+            timer++;
+            if (cache.stage >= 12 && cache.stage <= 16) {
+                speedrunTimer--;
+                if (speedrunTimer === 60) {
+                    popup('1', 300, 200, 40, 60);
+                }
+                if (speedrunTimer === 120) {
+                    popup('2', 300, 200, 40, 60);
+                }
+                if (speedrunTimer === 180) {
+                    popup('3', 300, 200, 40, 60);
+                }
+                if (speedrunTimer <= 0) {
+                    popup('TIME\'S UP.', 300, 200, 20, 120);
+                    cache.stage = 11;
+                    speedrunTimer = 10800;
+                    cache.load();
+                    return;
+                }
+            }
+            if (useCOD) {
+                crusherOfDoom++;
+            }
+        }
+        //}
+        /* Everything "in the world" */
+        //{
+        lens.x = constrain(lens.x + (300 - player.x - lens.x) / 5, lens.right, Math.max(-crusherOfDoom, lens.right));
+        /* Styling */
+        //{
+        var pc = player.complete;
+        if (cache.style === 0) {
+            background(64);
+            if (!reduceLag) {
+                var c = pc / 2 + 400;
+                pushMatrix();
+                lens.apply(0.25); /* Applies quarter translation. */
+                for (var i = 0; i < c; i += 200) {
+                    display('city-background', i, 146, 200, 175);
+                }
+                popMatrix();
+                pushMatrix();
+                lens.apply(0.5); /* Apply half translation to simulate far-awayness. */
+                for (var i = 0; i < c; i += 400) {
+                    display('city-foreground', i, 72, 400, 328);
+                }
+                popMatrix();
+            }
+        }
+        pushMatrix();
+        lens.apply(1); /* Fully apply the lens. */
+        if ((cache.stage === 8 && droppers[0].falling) || cache.stage === 9) {
+            background(225, 225, 225);
+            stroke(240, 240, 240);
+            strokeWeight(1);
+            for (var y = 20; y < 400; y += 15) {
+                line(0, y, pc, y);
+            }
+            for (var x = 20; x < pc; x += 15) {
+                line(x, 0, x, 400);
+            }
+        }
+        var art = cache.art[cache.stage];
+        if (typeof art === 'function') {
+            fill(64);
+            stroke(128);
+            strokeWeight(1);
+            if (cache.helping) {
+                textFont(createFont('Arial'));
+                cache.helpArt[cache.stage]();
+                textFont(createFont('Arial Bold'));
+            }
+            else {
+                art();
+            }
+        }
+        var t2 = millis();
+        //}
+        /* Updates */
+        //{
+        var i = spikes.length;
+        while (i--) {
+            spikes[i].draw();
+        }
+        i = blocks.length;
+        var blockImage = Block.image,
+            lx = -lens.x;
+        /* SUPER optimized! */
+        while (i) {
+            var b = blocks[--i],
+                bx = b.x;
+            if (bx + 20 > lx && bx < lx + 600) {
+                cx.drawImage(blockImage, bx, b.y, 20, 20);
+            }
+        }
+        i = fixtures.length;
+        while (i) {
+            var b = fixtures[--i],
+                bx = b.x;
+            if (bx + 20 > lx && bx < lx + 600) {
+                cx.drawImage(blockImage, bx, b.y, 20, 20);
+            }
+        }
+        i = flowblocks.length;
+        while (i--) {
+            flowblocks[i].draw();
+        }
+        i = antiblocks.length;
+        while (i--) {
+            antiblocks[i].draw();
+        }
+        i = bouncers.length;
+        while (i--) {
+            bouncers[i].draw();
+        }
+        i = movers.length;
+        while (i--) {
+            movers[i].draw();
+        }
+        i = teleporters.length;
+        while (i--) {
+            if (!paused) { teleporters[i].update(); }
+            teleporters[i].draw();
+        }
+        i = crushers.length;
+        while (i--) {
+            if (!paused) { crushers[i].update(); }
+            crushers[i].draw();
+        }
+        i = droppers.length;
+        while (i--) {
+            if (!paused) { droppers[i].update(); }
+            droppers[i].draw();
+        }
+        i = wheels.length;
+        while (i--) {
+            wheels[i].draw();
+        }
+        i = pendulums.length;
+        while (i--) {
+            if (!paused) { pendulums[i].update(); }
+            pendulums[i].draw();
+        }
+        i = flags.length;
+        while (i--) {
+            flags[i].draw();
+        }
+        var t3 = millis();
+        if (((frameCount > 240 || cache.stage !== 1) || cache.helping) && !paused) {
+            player.update();
+        }
+        var t4 = millis();
+        player.draw();
+        /* Only draw COD if visible. */
+        if (useCOD) {
+            display('crusher-of-doom-front', crusherOfDoom, 0, 20, 400);
+            if (lens.right >= -crusherOfDoom) {
+                display('crusher-of-doom', 0, 0, crusherOfDoom, 400);
+            }
+        }
+        popMatrix();
+        //}
+        //}
+        /* Buttons and GUI */
+        //{
+        if (button(5, 120, 'Reduce Lag', 'Increase Effects', !reduceLag)) {
+            reduceLag = !reduceLag;
+        }
+        if (button(5, 175, 'Pause', 'Resume', !paused)) {
+            paused = !paused;
+        }
+        if (button(5, 190, 'Skip Stage')) {
+            var m = cache.stage;
+            cache.load(); /* Loads next stage. */
+            /* Checks if load was successful. */
+            if (m !== cache.stage) {
+                timer += 7200; /* Adds the 2 minute penalty. */
+            }
+        }
+        if (button(5, 205, 'Main Menu')) {
+            timer = 0;
+            frameCount = 0;
+            speedrunTimer = 0;
+            cache.stage = 0;
+            cache.style = 0;
+            player.deaths = 0;
+            state = 'menu';
+            cache.helping = false;
+            return;
+        }
+        fill(player.flowAmount > player.threshhold || player.flowing ? -1 : -3881788);
+        rect(150, 8, 300 / (player.threshhold * 4) * player.flowAmount, 22);
+        textFont(createFont("Arial"), 12);
+        display('flow-gui', 107, 8, 342, 22);
+        if (player.flowAmount > player.threshhold || player.flowing) {
+            fill(255, 255, 255);
+            textAlign(LEFT, TOP);
+            textSize(11);
+            text("FLOW READY (HOLD SPACE BAR)", 235, 20);
+        }
+        if (!cache.helping) {
+            fill(200);
+            textSize(12);
+            textAlign(LEFT, TOP);
+            text('Deaths: ' + player.deaths, 5, 3);
+            textAlign(RIGHT, TOP);
+            var i = cache.stage;
+            while (i--) {
+                if (!cache.messages[i]) { continue; }
+                text("Stage " + cache.stage + "\n" + cache.messages[i], 595, 3);
+                break;
+            }
+            textFont(createFont("Arial"), 35);
+            fill(200, 200, 200);
+            text(time(timer), 595, 360);
+        }
+        fill(255, 255, 255, cache.transparency);
+        rect(0, 0, player.complete, 400);
+        cache.transparency -= 5;
+        cache.transparency = peg(cache.transparency);
+        /* Stage 1 "3...2...1" gig */
+        if ((frameCount <= 240 && cache.stage === 1) && !cache.helping) {
+            textSize(50);
+            textAlign(CENTER, CENTER);
+            pushMatrix();
+            translate(300, 200);
+            if (frameCount <= 60) {
+                scale(1 + Math.sin(frameCount / 60));
+                fill(255, 255, 255, frameCount * 255 / 60);
+                text("3", 0, 0);
+            }
+            else if (frameCount <= 120) {
+                scale(1 + Math.sin((frameCount - 60) / 60));
+                fill(255, 255, 255, (frameCount - 60) * 255 / 60);
+                text("2", 0, 0);
+            }
+            else if (frameCount <= 180) {
+                scale(1 + Math.sin((frameCount - 120) / 60));
+                fill(255, 255, 255, (frameCount - 120) * 255 / 60);
+                text("1", 0, 0);
+            }
+            else {
+                scale(1 + Math.sin((frameCount - 180) / 60));
+                fill(255, 255, 255, (frameCount - 180) * 255 / 60);
+                text("GO!", 0, 0);
+            }
+            popMatrix();
+        }
+        /* Handles popups */
+        var i = popups.length;
+        while (i--) {
+            popups[i].draw();
+            if (popups[i].life <= 0) { popups.splice(i, 1); }
+        }
+        fill(196);
+        textAlign(LEFT, BOTTOM);
+        textSize(12);
+        var t5 = millis();
+        framerate = t5 - t1;
+        usage = 6 * framerate;
+        //text('Usage: ' + framerate.toFixed(0) + 'ms. (' + usage.toFixed(0) + '% altogether: ' + (t2 - t1) * 6 + '% background, ' + (t3 - t2) * 6 + '% updates, ' + (t4 - t3) * 6 + '% collisions, ' + (t5 - t4) * 6 + '% UI)', 5, 397);
+        if (paused) {
+            fill(0, 0, 0, 100);
+            noStroke();
+            rect(0, 0, player.complete, 400);
+            fill(128);
+            rect(560, 100, 30, 200, 5);
+            display('spectrum', 565, 110, 20, 180);
+            noStroke();
+            fill(128);
+            if (mouse.over(560, 300, 30, 30)) {
+                fill(96);
+                if (mouse.pressed) {
+                    fill(64);
+                }
+                if (mouse.click) {
+                    yourColor = -16711936;
+                    requestNewFlagGradient = true;
+                }
+            }
+            rect(560, 300, 30, 30, 5);
+            fill(0, 255, 0);
+            rect(565, 305, 20, 20);
+            if (mouse.over(565, 110, 20, 180)) {
+                pushMatrix();
+                translate(160, 0);
+                fill(128);
+                noStroke();
+                triangle(395, mouse.y, 385, mouse.y - 10, 385, mouse.y + 10);
+                rect(345, mouse.y - 20, 40, 50, 10);
+                if (mouse.click) {
+                    colorMode(HSB);
+                    yourColor = color(map(mouse.y - 110, 0, 180, 0, 255), 255, 255);
+                    requestNewFlagGradient = true;
+                    colorMode(RGB);
+                }
+                colorMode(HSB);
+                fill(map(mouse.y - 110, 0, 180, 0, 255), 255, 255);
+                rect(350, mouse.y - 15, 20, 20);
+                fill(yourColor);
+                rect(350, mouse.y + 10, 10, 10);
+                colorMode(RGB);
+                popMatrix();
+            }
+        }
+        //}
+    };
+    draw = function() {
+        cursor(ARROW);
+        try {
+            if (state === 'loading') { loadScreen(); }
+            if (state === 'logo') { logo(600); }
+            if (state === 'menu') { menu(); }
+            if (state === 'exitPath2') { exitPath2(); }
+            if (state === 'highScores') { highScores(); }
+        }
+        catch (e) {
+            var a = e + '';
+            println(a);
+            fill(255);
+            textAlign(CENTER, TOP);
+            textSize(30);
+            text(/is not a function/.test(a) ? 'KA\'s "__' + 'env__.rect is not a function" bug has struck again! Please restart the program :(' : a, 100, 100, 400, Infinity);
+            noLoop();
+            Program.fatalErrorOccurence = true;
+        }
+        mouse.click = false;
+    };
+    /* Tell OhNoes to keep his mouth shut. */
+    var initialize = function() {
+        this[0 || 'KAInfiniteLoopSetTimeout'](40000);
+    };
+    initialize();
+    
+    /* High scores go here! */
+    score('Lionofgd', '1:48.15');
+    score('Jonny (Jonny Z King)', '6:27.38');
+    score('Aabid Quraishi', '3:35.23');
+    score('Fallen Star', '3:40.17');
+    score('Photonic Symmetry', '4:49.93');
+    score('ajkitchen™', '3:58.28');
+    score('Subhronil', '3:14.47');
+    score('lincolnpepper', '2:13.32');
+    score('Ben Hudson', '3:24.65');
+    score('Gimcrack', '3:10.73');
+    score('GameChief999', '2:44.40');
+    score('Master Beef', '2:54.40');
+    score('з= ( ▀ ͜͞ʖ▀) =ε','2:09.73');
+    score('Matthias', '3:11.75');
+    score('hamac2003', '1:39.83');
+    score('Banananose', '2:42.50');
+    score('Nate the Great', '2:37.20');
+    score('Josiah TCW', '2:53.90');
+    score('Fallen Star', '2:48.60');
+    score('WillTheProgrammer', '2:31.65');
+    score('orionoth', '2:09.30');
+    score('Blashman', '2:05.33');
+    score('Walter Levin', '1:40.35');
+    score('Isaac Levin', '1:58.98');
+    score('Jason Wright', '3:44.95');
+    score('Ethan De Boer', '2:23.13');
+    score('Joshua Egwim', '2:29.72');
+    score('Tyler Vu', '2:28.03');
+    score('esimnegar', '2:19.87');
+    score('David Simnegar', '1:47.18');
+    score('Eli Uminer', '1:58.72');
+    score('Ranon Milgram', '1:51.65');
+    score('Levi Bleich', '2:08.82');
+    score('Rubio388', '1:57.32');
+    
+    initializeScores();
+</script>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+Written with the assistance and advice of Willard, xacer, Gray Wolf, Isaac Emerald, littlewhinging, Phi, my family, and many more!
+
+This is the third and final installment in my Exit Path series. It all started with the original flash game by jmbt02 (armorgames.com/play/5917/exit-path) which I greatly enjoyed playing in 2010. Five years ago, I ported the game to Khan Academy (khanacademy.org/cs/_/6719767876861952) and created a stage creator where anyone can create their own stages. A year later, I completed an original sequel (\) and accompanying stage creator (khanacademy.org/cs/_/5936425535488000). I also created Exit Path - Race Edition (khanacademy.org/cs/_/4537466357219328) where two players can race through arenas against one another to prove who is fastest.
+
+When writing Exit Path 3, I focused first on performance and second on production. I used countless tricks to make the game to run smoothly despite the inclusion of mechanics that would otherwise make the game extremely slow. I also wanted this game to be well produced enough that it could potentially be included on a website like ArmorGames which hosted the original Exit Path.
+
+I hope you guys enjoy the game!
+-->
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Exit Path 4</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<canvas id="bg-layer" tabindex="0" width="600" height="400"></canvas>
+	<canvas id="bg-1" tabindex="0" width="600" height="400"></canvas>
+	<canvas id="bg-2" tabindex="0" width="600" height="400"></canvas>
+	<canvas id="fg-layer" tabindex="0" width="600" height="400"></canvas>
+	<canvas id="game-layer" tabindex="0" width="600" height="400"></canvas>
+	<canvas id="flow-meter-layer" tabindex="0" width="340" height="30"></canvas>
+	<span id="flow-ready-text" hidden>FLOW READY (PUSH SPACE)</span>
+	<div id="ep3" hidden>EXIT PATH&nbsp;<span id="three">4</span></div>
+	<span id="hs" hidden>FASTEST RUNNERS</span>
+	<span id="personal-best" hidden></span>
+	<span id="stage-text" hidden></span>
+	<span id="level-name" hidden>Level Name</span>
+	<span id="theme-name" hidden></span>
+	<div id="game-objects">
+		<div id="laser-lights"></div>
+		<div id="moving-spikes"></div>
+		<div id="moving-blocks"></div>
+		<div id="wheels"></div>
+		<div id="pendulums"></div>
+		<div id="player-selves"></div>
+		<div id="flow-particles"></div>
+		<div id="teleporter-flashes"></div>
+		<div id="laser-smokes"></div>
+		<div id="start-flashes"></div>
+	</div>
+	<!-- The player's thoughts are choice lyrics from the
+        album Catch ThirtyThree by the metal band Meshuggah. -->
+	<div id="thoughts"></div>
+	<div id="buttons"></div>
+	<canvas id="color-picker" width="200" height="220" hidden></canvas>
+	<span id="dev-info"></span>
+	<span id="debug"></span>
+	<span id="timer"></span>
+	<div id="one-to-five-container">
+		<ol id="one-to-five" hidden>
+			<li>—</li>
+			<li>—</li>
+			<li>—</li>
+			<li>—</li>
+			<li>—</li>
+		</ol>
+		<div id="hs-instructions" hidden>
+			<p>
+				TO BECOME A FASTEST RUNNER, SAVE AS A SPINOFF <em>WITH THIS PAGE VISIBLY DISPLAYING YOUR PERSONAL
+					BEST</em> AND LINK THE SPINOFF IN THE T&T.
+			</p>
+		</div>
+	</div>
+	<div id="six-to-ten-container">
+		<ol id="six-to-ten" start="6" hidden>
+			<li>—</li>
+			<li>—</li>
+			<li>—</li>
+			<li>—</li>
+			<li>—</li>
+		</ol>
+	</div>
+	<!-- Thanks Willard! <script></script> -->
+	<script type="application/javascript" src="script.js"></script>
+	<script>
+		if (DEBUG_LEVEL) {
+		stages = [
+			new Stage(solitaryTheme, [
+			'                              ','                              ','                              ','                              ','                              ','                              ','                              ','           ■■■■■■■            ','           ■□ . □■            ','           ■ ■■■ ■            ','           ■}■P■{■            ','           ■ ■■■ ■            ','           ■□ ^ □■            ','           ■■■■■■■            ','                              ','                              ','                              ','                              ','                              ','                              '
+			]),
+			
+			
+			new Stage(solitaryTheme, [
+				'■                          U                               ■',
+				'■                         ■▼■                              ■',
+				'■                          ■                               ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                E       MMMMM                             ■',
+				'■                                                          ■',
+				'■                                ■                         ■',
+				'■                                                          ■',
+				'■}                   E  BBBB  E                            ■',
+				'■}                                                         ■',
+				'■}                             ◢■■■■■■◣                    ■',
+				'■         E  B E              ◢■■■■■■■■◣                   ■',
+				'■◣                           ◢■■■■■■■■■■◣                  ■',
+				'■■◣                         ◢■■■■■■■■■■■■◣        P   1    ■',
+				'■■■■■■■■■■■■■+■■■■■■□■■■■■■+■■■■■■■■■■■■■■+■■■■■■■■■■■■■■■■■',
+				'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+				'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+				'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+				' ',
+				'1'
+			], ctx => {
+				levelName = 'DEBUG'
+				drawSign(ctx, 300, 100, 100, 40);
+				drawSignLight(ctx, 325, 100, 30);
+				drawSignLight(ctx, 375, 100, 30);
+				ctx.font = arial(9);
+				ctx.fillStyle = '#DDD';
+				drawSquare(ctx, 340, 103, 20, 20, false);
+				centerText(ctx, 'DEBUG LEVEL 1', 350, 135);
+				ctx.fillRect(242, 225, 16, 16);
+				ctx.beginPath();
+				ctx.font = roboto(10);
+				drawSign(ctx, 850, 100, 185, 55);
+				ctx.fillStyle = '#DDD';
+				wrapText(ctx, 'Welcome to Debug Level 1. \nIf you\'re not a developer, you shouldn\'t be here. This one mostly focuses on player and object movement', 855, 115, 183)
+				
+			}),
+
+			new Stage(govCenterTheme, [
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■                                                          ■',
+				'■     P                                                    ■',
+				'+■+■+■+■+□+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■+■',
+				'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+				'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+				'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+			], ctx => {
+				levelName = 'DEBUG'
+				drawSign(ctx, 300, 100, 100, 40);
+				drawSignLight(ctx, 325, 100, 30);
+				drawSignLight(ctx, 375, 100, 30);
+				ctx.font = arial(9);
+				ctx.fillStyle = '#DDD';
+				centerText(ctx, 'DEBUG LEVEL 2', 350, 125);
+				ctx.beginPath();
+				ctx.font = roboto(10);
+				drawSign(ctx, 150, 140, 185, 45);
+				ctx.fillStyle = '#DDD';
+				wrapText(ctx, 'Welcome to Debug Level 2. \nIf you\'re not a developer, you shouldn\'t be here. This one mostly focuses on new tile creation', 155, 155, 183)
+			}),
+
+		];}
+	</script>
+</body>
+
+</html>

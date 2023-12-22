@@ -1,0 +1,422 @@
+body {
+	overflow: hidden;
+	/* Hide scrollbars */
+}
+
+body * {
+	position: absolute;
+}
+
+canvas {
+	left: 0px;
+	top: 0px;
+}
+
+#bg-layer {
+	z-index: 1;
+}
+
+#bg-1 {
+	z-index: 2;
+}
+
+#bg-2 {
+	z-index: 3;
+}
+
+#laser-lights {
+	z-index: 9;
+}
+
+#fg-layer {
+	left: 0px;
+	z-index: 6;
+}
+
+#game-layer {
+	z-index: 7;
+}
+
+#game-objects {
+	left: 0px;
+	top: 0px;
+}
+
+.player-self {
+	width: 20px;
+	height: 20px;
+	background-color: #FFF8;
+}
+
+.laser-smoke {
+	width: 5px;
+	height: 5px;
+	background-color: #BBB8;
+}
+
+.flow-particle {
+	width: 5px;
+	height: 5px;
+}
+
+.teleporter-flash {
+	background-image: linear-gradient(to left, #DDD, #FFF, #FFF, #DDD);
+	animation: tp-flash 1s 1 ease-in-out;
+}
+
+.laser-light {
+	transform-origin: center top;
+}
+
+@keyframes tp-flash {
+	from {
+		opacity: 80%;
+	}
+
+	to {
+		opacity: 0%;
+		transform: scaleX(4);
+	}
+}
+
+.wheel,
+.pendulum {
+	animation: wheel-rotation 4s infinite linear;
+}
+
+@keyframes wheel-rotation {
+	from {
+		transform: rotate(360deg);
+	}
+
+	to {
+		transform: rotate(0deg);
+	}
+}
+
+#moving-spikes {
+	z-index: 4;
+}
+
+#wheels,
+#pendulums,
+#flow-particles,
+#teleporter-flashes,
+#laser-smokes {
+	z-index: 9;
+}
+
+#moving-blocks,
+#player-selves {
+	z-index: 8;
+}
+
+#flow-meter-layer,
+#flow-ready-text {
+	z-index: 10;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+	top: 10px;
+}
+
+#flow-ready-text {
+	z-index: 10;
+	margin-left: auto;
+	margin-right: auto;
+	left: 20px;
+	right: 0;
+	top: 21px;
+	text-align: center;
+	color: #DDD;
+	font: normal normal bold 10px/12px "Arial", sans-serif;
+}
+
+#start-flashes {
+	z-index: 11;
+}
+
+.start-flash {
+	background-color: #EEE;
+	left: 0px;
+	top: 0px;
+	width: 800px;
+	height: 400px;
+	animation: fade-background 1s 1 ease-out;
+}
+
+@keyframes fade-background {
+	from {
+		opacity: 100%;
+	}
+
+	to {
+		opacity: 0%;
+	}
+}
+
+#dev-info {
+	left: 10px;
+	top: 360px;
+	font: normal normal normal 10px/12px "Arial", sans-serif;
+	z-index: 12;
+	color: #FFF;
+}
+
+#debug {
+	left: 10px;
+	top: 380px;
+	font: normal normal normal 10px/12px "Arial", sans-serif;
+	z-index: 12;
+	color: #FFF;
+}
+
+#timer {
+	z-index: 12;
+	right: 5px;
+	top: 360px;
+	font: normal normal normal 35px/42px "Arial", sans-serif;
+	color: #EEE;
+}
+
+#buttons {
+	left: 0px;
+	top: 0px;
+}
+
+.button {
+	z-index: 11;
+}
+
+.menu-button,
+.highscores-button {
+	background-color: #333;
+	color: #FFF;
+	font: normal normal normal 40px/55px "Trebuchet MS", sans-serif;
+	border-radius: 10px;
+	transition-duration: 0.5s;
+	border: 5px inset #555;
+	white-space: nowrap;
+}
+
+.menu-button:hover,
+.highscores-button:hover {
+	cursor: pointer;
+	background-color: #555;
+}
+
+.menu-button:focus,
+.highscores-button:focus {
+	outline-color: #DDD;
+	outline-style: solid;
+}
+
+.game-button {
+	background: none;
+	border: none;
+	color: #DDD;
+	font: normal normal bold 12px/14px "Arial", sans-serif;
+	white-space: nowrap;
+	transition-duration: 0.5s;
+}
+
+.game-button:hover {
+	color: #FFF;
+	cursor: pointer;
+	outline: none !important;
+}
+
+/* I'd remove the outline entirely, but it's important for accessibility. */
+.game-button:focus {
+	outline-color: #DDD;
+	outline-style: solid;
+}
+
+#thoughts {
+	z-index: 12;
+	left: 0px;
+	top: 0px;
+}
+
+.thought {
+	background-color: #FFF;
+	left: 0px;
+	top: 0px;
+	width: 800px;
+	height: 400px;
+	font: italic normal normal 20px/35px "Trebuchet MS", sans-serif;
+	/*The following three lines center the text horizotally and vertically. It's silly how hard this is to do.*/
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	white-space: nowrap;
+	text-align: center;
+	animation: fade-text 5s 1 ease-in;
+}
+
+@keyframes fade-text {
+	0% {
+		color: #000;
+	}
+
+	50% {
+		color: #000;
+	}
+
+	100% {
+		color: #0000;
+	}
+}
+
+#color-picker {
+	z-index: 13;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0px;
+	right: 0px;
+	top: 100px;
+}
+
+#ep3 {
+	z-index: 11;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0px;
+	right: 0px;
+	top: 40px;
+	text-align: center;
+	color: #FFF;
+	font: normal normal bold 70px/55px "Trebuchet MS", sans-serif;
+}
+
+#hs {
+	z-index: 11;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0px;
+	right: 0px;
+	top: 40px;
+	text-align: center;
+	color: #000;
+	font: normal normal bold 50px/65px "Trebuchet MS", sans-serif;
+}
+
+#personal-best {
+	z-index: 11;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0px;
+	right: 0px;
+	top: 110px;
+	text-align: center;
+	font: normal normal bold 30px/45px "Trebuchet MS", sans-serif;
+}
+
+#stage-text {
+	z-index: 11;
+	right: 5px;
+	top: 5px;
+	color: #DDD;
+	font: normal normal normal 12px/14px "Arial", sans-serif;
+}
+
+#theme-name {
+	z-index: 11;
+	right: 5px;
+	top: 19px;
+	color: #DDD;
+	font: normal normal normal 12px/14px "Arial", sans-serif;
+}
+
+#one-to-five-container {
+	position: relative;
+	top: 130px;
+	float: left;
+	width: 50%;
+}
+
+#hs-instructions {
+	top: 150px;
+	width: 70%;
+}
+
+#hs-instructions * {
+	z-index: 11;
+	position: relative;
+	color: #000;
+	font-weight: bold;
+	font-family: "Trebuchet MS", sans-serif;
+	font-size: 12px;
+}
+
+#one-to-five *,
+#six-to-ten * {
+	z-index: 11;
+	position: relative;
+	white-space: nowrap;
+	list-style-position: inside;
+	color: #000;
+	font: normal normal bold 14px/25px "Trebuchet MS", sans-serif;
+}
+
+#six-to-ten-container {
+	top: 130px;
+	position: relative;
+	float: right;
+	width: 50%;
+}
+
+#three {
+	position: relative;
+	font-style: italic;
+}
+
+/* cyrillic-ext 
+@font-face {
+	font-family: 'Ubuntu';
+	font-style: normal;
+	font-weight: 400;
+	src: url(https://fonts.gstatic.com/s/ubuntu/v20/4iCs6KVjbNBYlgoKcg72j00.woff2) format('woff2');
+	unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+  }
+  /* cyrillic 
+  @font-face {
+	font-family: 'Ubuntu';
+	font-style: normal;
+	font-weight: 400;
+	src: url(https://fonts.gstatic.com/s/ubuntu/v20/4iCs6KVjbNBYlgoKew72j00.woff2) format('woff2');
+	unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+  }
+  /* greek-ext 
+  @font-face {
+	font-family: 'Ubuntu';
+	font-style: normal;
+	font-weight: 400;
+	src: url(https://fonts.gstatic.com/s/ubuntu/v20/4iCs6KVjbNBYlgoKcw72j00.woff2) format('woff2');
+	unicode-range: U+1F00-1FFF;
+  }
+  /* greek 
+  @font-face {
+	font-family: 'Ubuntu';
+	font-style: normal;
+	font-weight: 400;
+	src: url(https://fonts.gstatic.com/s/ubuntu/v20/4iCs6KVjbNBYlgoKfA72j00.woff2) format('woff2');
+	unicode-range: U+0370-03FF;
+  }
+  /* latin-ext 
+  @font-face {
+	font-family: 'Ubuntu';
+	font-style: normal;
+	font-weight: 400;
+	src: url(https://fonts.gstatic.com/s/ubuntu/v20/4iCs6KVjbNBYlgoKcQ72j00.woff2) format('woff2');
+	unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  /* latin 
+  @font-face {
+	font-family: 'Ubuntu';
+	font-style: normal;
+	font-weight: 400;
+	src: url(https://fonts.gstatic.com/s/ubuntu/v20/4iCs6KVjbNBYlgoKfw72.woff2) format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }*/

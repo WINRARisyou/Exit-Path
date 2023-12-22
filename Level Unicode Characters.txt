@@ -1,0 +1,43 @@
+Level Unicode Characters:
+
+CUSTOM CHARACTERS:
+
+E, Moving platform boundry
+L, Moving Bouncer
+
+
+P, Player spawnpoint
+F, Checkpoint
+$, Sawblade
+#, Large Sawblade
+C, Extending Ceiling Spike
+U, Pendulum
+B, Moving Platform, custom controllers created
+M, Moving Mirror Platform ^^^
+1-9 , Teleporters, Place two of the same number to create a teleporter
+▧, u25A7, Mirror
+^, Upwards Spike
+{, Left facing spike
+}, Right facing spike
+., Down facing spike
+<, Left conveyor belt
+>, Right conveyor belt
++, Flow Charger
+-, Flow depleter
+■, u25A0, Ground tile
+□, u25A1, Spring tile
+◬, u25EC, Light tile
+◢, u25E2, Right slope floor
+◣, u25E3, Left slope floor
+◤, u25E4, Left slope ceiling
+◥, u25E5, Right slope ceiling
+¯, uAF, Top Slab
+ꜛ, uA17C, Spike coming out of floor
+ꜜ, uA17B, Spike coming out of ceiling
+↢, u21A2, Left Spike coming out of wall
+↣, u21A3, Right Spike coming out of wall
+▓, u2593, Background tile
+▶, u25B6, Right facing laser
+◀, u25C0, Left facing laser
+▼, u25BC, Down facing laser
+▲, u25B2, Up facing laser
