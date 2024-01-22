@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <!--
-Written with the assistance and advice of Willard, xacer, Gray Wolf, Isaac Emerald, littlewhinging, Phi, my family, and many more!
+Original game written with the assistance and advice of Willard, xacer, Gray Wolf, Isaac Emerald, littlewhinging, Phi, my family, and many more!
 
-This is the third and final installment in my Exit Path series. It all started with the original flash game by jmbt02 (armorgames.com/play/5917/exit-path) which I greatly enjoyed playing in 2010. Five years ago, I ported the game to Khan Academy (khanacademy.org/cs/_/6719767876861952) and created a stage creator where anyone can create their own stages. A year later, I completed an original sequel (\) and accompanying stage creator (khanacademy.org/cs/_/5936425535488000). I also created Exit Path - Race Edition (khanacademy.org/cs/_/4537466357219328) where two players can race through arenas against one another to prove who is fastest.
-
-When writing Exit Path 3, I focused first on performance and second on production. I used countless tricks to make the game to run smoothly despite the inclusion of mechanics that would otherwise make the game extremely slow. I also wanted this game to be well produced enough that it could potentially be included on a website like ArmorGames which hosted the original Exit Path.
-
-I hope you guys enjoy the game!
+Modified by WinRAR on github, https://github.com/WINRARisyou/Exit-Path
 -->
 <html>
 
 <head>
 	<meta charset="utf-8">
 	<title>Exit Path 4</title>
-	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="/css/game.css">
 </head>
 
 <body>
@@ -42,8 +38,7 @@ I hope you guys enjoy the game!
 		<div id="laser-smokes"></div>
 		<div id="start-flashes"></div>
 	</div>
-	<!-- The player's thoughts are choice lyrics from the
-        album Catch ThirtyThree by the metal band Meshuggah. -->
+	<!-- The "thought" system may or may not be removed, but it's still here for now-->
 	<div id="thoughts"></div>
 	<div id="buttons"></div>
 	<canvas id="color-picker" width="200" height="220" hidden></canvas>
@@ -75,7 +70,7 @@ I hope you guys enjoy the game!
 		</ol>
 	</div>
 	<!-- Thanks Willard! <script></script> -->
-	<script type="application/javascript" src="script.js"></script>
+	<script type="application/javascript" src="/js/game.js"></script>
 	<script>
 		if (DEBUG_LEVEL) {
 		stages = [
