@@ -28,7 +28,7 @@ const LS_PLAYER_HUE = 'exit-path-3-player-hue';
 const ENABLE_THOUGHTS = true;
 // Desired frame time (in milliseconds). If frame time
 // goes above this limit, lag reduction measures begin.
-// The game runs at 60 fps, so any frame longer than 1000/60
+// The game runs at 60 fps, so any frame longer than 1000/60t
 // milliseconds causes lag.
 const FRAME_TIME = 1000 / FRAMES_PER_SECOND;
 let startTime;
