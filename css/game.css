@@ -302,6 +302,42 @@ canvas {
 	font: normal normal bold 50px/65px "Trebuchet MS", sans-serif;
 }
 
+#cs {
+	z-index: 11;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0px;
+	right: 0px;
+	top: 40px;
+	text-align: center;
+	color: #000000;
+	font: normal normal bold 50px/65px "Trebuchet MS", sans-serif;
+}
+
+#cs-center-txt-area {
+	z-index: 11;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0px;
+	right: 0px;
+	top: 40px;
+	text-align: center;
+	color: #000000;
+	font: normal normal bold 50px/65px "Trebuchet MS", sans-serif;
+}
+
+#cs-txt-area {
+	z-index: 11;
+	margin-left: auto;
+	margin-right: auto;
+	left: 100px;
+	right: 100px;
+	top: 90px;
+	text-align: center;
+	color: #000000;
+	font: normal normal bold 20px/25px "Trebuchet MS", sans-serif;
+}
+
 #personal-best {
 	z-index: 11;
 	margin-left: auto;
@@ -322,6 +358,14 @@ canvas {
 }
 
 #theme-name {
+	z-index: 11;
+	right: 5px;
+	top: 30px;
+	color: #DDD;
+	font: normal normal normal 12px/14px "Arial", sans-serif;
+}
+
+#level-name {
 	z-index: 11;
 	right: 5px;
 	top: 19px;
@@ -367,7 +411,7 @@ canvas {
 	width: 50%;
 }
 
-#three {
+#four {
 	position: relative;
 	font-style: italic;
 }
