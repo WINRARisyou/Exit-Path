@@ -14,14 +14,37 @@ const MAX_CATCH_UP_FRAMES = 3;
 // "forgives" the delay and allows the game to continue
 const MAX_DELAY_FRAMES = 30;
 
+// Whether to attempt to load custom stages or not
+var custom_stage = false;
+var stageOverride;
+
 // Debugging tools
 const DEV_MODE = true;
-const DEBUG_LEVEL = true;
+const DEBUG_LEVEL = false;
 let infFlow = false;
 if (DEV_MODE) {
-	(function () { var script = document.createElement('script'); script.src = "eruda.js"; document.body.append(script); script.onload = function () { eruda.init(); } })();
+	(function () { var script = document.createElement('script'); script.src = "/js/eruda.js"; document.body.append(script); script.onload = function () { eruda.init(); } })();
 }
 
+function getUrlParameters(param) {
+	const queryString = window.location.search;
+	const urlParams = new URLSearchParams(queryString);
+	const getParam = urlParams.get(param);
+	return(getParam);
+}
+
+
+function getArrayParameter(paramName) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramValueString = urlParams.get(paramName);
+
+    // Parse the string value to an array
+    const paramValueArray = paramValueString ? JSON.parse(paramValueString) : [];
+
+    return paramValueArray;
+}
+//const myArray = getArrayParameter('stage')
+//alert(myArray)
 
 const LS_PLAYER_HUE = 'exit-path-3-player-hue';
 
@@ -73,6 +96,7 @@ const levelNameEl = document.getElementById('level-name');
 const personalBestEl = document.getElementById('personal-best');
 const hs1to5El = document.getElementById('one-to-five');
 const hs6to10El = document.getElementById('six-to-ten');
+const csTxtAreaEl = document.getElementById('custom-stage-txt-area')
 const bgCtx = bgLayerEl.getContext('2d', { alpha: false });
 const bg1Ctx = bg1El.getContext('2d');
 const bg2Ctx = bg2El.getContext('2d');
@@ -117,7 +141,18 @@ gameLayerEl.width = width;
 
 let stages, stageIndex;
 
-let playButton, hsButton, backButton;
+// Had to place it here otherwise if it was before stages was properly declared, it would bug out and default to null
+// stageOverride = getUrlParameters('stage');
+// scrapped
+
+//if (stageOverride == undefined || stageOverride == "" || stageOverride == null) {
+//	console.log('this shouldn\'t happen and if it has, the game is about to break')
+//} else {
+//	custom_stage = true;
+//}
+
+let playButton, hsButton, csButton, backButton, csbackButton, csGoButton;
+// hehe csgo
 
 const widthDiff = window.innerWidth - document.body.clientWidth;
 
@@ -126,8 +161,11 @@ function updateWidth() {
 	bgLayerEl.width = width;
 	gameLayerEl.width = width;
 	playButton.style.left = Math.floor(width / 2 - playButton.offsetWidth / 2) + 'px';
+	csButton.style.left = Math.floor(width / 2 - csButton.offsetWidth / 2) + 'px';
+	csGoButton.style.left = Math.floor(width / 2 - csGoButton.offsetWidth / 2) + 'px';
 	hsButton.style.left = Math.floor(width / 2 - hsButton.offsetWidth / 2) + 'px';
 	backButton.style.left = Math.floor(width / 2 - backButton.offsetWidth / 2) + 'px';
+	csbackButton.style.left = Math.floor(width / 2 - csbackButton.offsetWidth / 2) + 'px';
 	if (stageIndex) {
 		bgCtx.fillStyle = stages[stageIndex].theme.bgStyle;
 	} else {
@@ -333,12 +371,12 @@ function setPlayerImage(hue) {
 	});
 }
 
-function setThree(hue) {
-	document.getElementById('three').style.color = `hsl(${hue}rad,100%,50%)`;
+function setFour(hue) {
+	document.getElementById('four').style.color = `hsl(${hue}rad,100%,50%)`;
 }
 
 setPlayerImage(playerHue);
-setThree(playerHue);
+setFour(playerHue);
 
 colorPickerEl.addEventListener('click', event => {
 	const cpLeft = colorPickerEl.offsetLeft + colorPickerEl.clientLeft,
@@ -359,7 +397,7 @@ colorPickerEl.addEventListener('click', event => {
 			// Who cares?
 		}
 		setPlayerImage(playerHue);
-		setThree(playerHue);
+		setFour(playerHue);
 		player.clear();
 		clearFlags();
 		clearShards();
@@ -411,7 +449,7 @@ pauseButton = createButton(5, 10, 'Pause', 'game', buttonEl => {
 	}
 });
 
-playButton = createButton(0, 200, 'PLAY', 'menu', buttonEl => {
+playButton = createButton(0, 100, 'PLAY', 'menu', buttonEl => {
 	timer = 0;
 	stageIndex = 0;
 	player.startedMoving = false;
@@ -419,12 +457,41 @@ playButton = createButton(0, 200, 'PLAY', 'menu', buttonEl => {
 	changeScreen('game');
 });
 
-hsButton = createButton(0, 300, 'FASTEST RUNNERS', 'menu', buttonEl => {
+hsButton = createButton(0, 200, 'FASTEST RUNNERS', 'menu', buttonEl => {
 	changeScreen('highscores');
+});
+
+csButton = createButton(0, 300, 'PLAY CUSTOM LEVELS', 'menu', buttonEl => {
+	changeScreen('customStage');
+	document.getElementById('cs').hidden = false;
+	document.getElementById('cs-center-txt-area').hidden = false;
+	// under development
+	//stageOverride = prompt('please enter your stage code')
+	//stages = stageOverride
 });
 
 backButton = createButton(0, 300, 'BACK', 'highscores', buttonEl => {
 	changeScreen('menu');
+});
+
+csbackButton = createButton(0, 300, 'BACK', 'customStage', buttonEl => {
+	changeScreen('menu');
+	document.getElementById('cs').hidden = true;
+	document.getElementById('cs-txt-area').hidden = true;
+});
+
+csGoButton = createButton(0, 240, 'GO!', 'customStage', buttonEl => {
+	alert('in development, prone to glitches')
+	var debug_cstest = document.getElementById('cs-txt-area').value
+	stages = [new Stage(solitaryTheme, debug_cstest.split('\n'))];
+	alert(stages)
+	alert(debug_cstest)
+	custom_stage = true
+	timer = 0;
+	stageIndex = 0;
+	player.startedMoving = false;
+	stages[stageIndex].initialize();
+	changeScreen('game');
 });
 
 updateWidth();
@@ -476,6 +543,10 @@ function changeScreen(newScreen) {
 		testingTheme.drawBackground(width);
 		bg1El.style.left = '0px';
 		bg2El.style.left = '0px';
+	} else if (screen === 'customStage') {
+		testingTheme.drawBackground(width);
+		bg1El.style.left = '0px';
+		bg2El.style.left = '0px';
 	}
 	stageTextEl.hidden = themeNameEl.hidden = levelNameEl.hidden = fgLayerEl.hidden = gameLayerEl.hidden = flowMeterLayerEl.hidden = timerEl.hidden = screen !== 'game';
 	colorPickerEl.hidden = screen !== 'game' || !paused;
@@ -483,6 +554,7 @@ function changeScreen(newScreen) {
 	personalBestEl.hidden = screen !== 'menu' && screen !== 'highscores';
 	personalBestEl.style.color = screen === 'menu' ? '#FFF' : '#000';
 	document.getElementById('hs').hidden = document.getElementById('hs-instructions').hidden = hs1to5El.hidden = hs6to10El.hidden = screen !== 'highscores';
+	document.getElementById('cs-center-txt-area').hidden = document.getElementById('cs-txt-area').hidden = screen !== 'customStage';
 }
 
 // Optimization from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/repeat
@@ -4675,10 +4747,10 @@ class Stage {
 	}
 }
 
-if (!DEBUG_LEVEL) {
-stages = [
 
-	new Stage(solitaryTheme, [
+
+if (!DEBUG_LEVEL && !custom_stage) {
+stages = [new Stage(solitaryTheme, [
 		'■                          U                               ■',
 		'■                         ■▼■                              ■',
 		'■                          ■                               ■',
@@ -4699,7 +4771,8 @@ stages = [
 		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
 		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
 		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■'
-	], ctx => {	
+	], ctx => {
+		levelName = 'DEBUG'
 		drawSign(ctx, 300, 100, 100, 40);
 		drawSignLight(ctx, 225, 220, 30);
 		drawSignLight(ctx, 275, 220, 30);
@@ -4719,8 +4792,12 @@ stages = [
 		centerText(ctx, 'HOLD LONGER TO JUMP HIGHER', 650, 252);
 		ctx.fillRect(500, 225, 16, 16);
 	}),
-
-]; }
+	]; 
+} //else if (custom_stage) {
+// 	alert('custom stage')
+// 	//stages = stageOverride
+// 	alert(stages)
+// }
 
 function renderMenu() {
 
