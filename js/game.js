@@ -484,8 +484,6 @@ csGoButton = createButton(0, 240, 'GO!', 'customStage', buttonEl => {
 	alert('in development, prone to glitches')
 	var debug_cstest = document.getElementById('cs-txt-area').value
 	stages = [new Stage(solitaryTheme, debug_cstest.split('\n'))];
-	alert(stages)
-	alert(debug_cstest)
 	custom_stage = true
 	timer = 0;
 	stageIndex = 0;
