@@ -23,7 +23,7 @@ const DEV_MODE = true;
 const DEBUG_LEVEL = false;
 let infFlow = false;
 if (DEV_MODE) {
-	(function () { var script = document.createElement('script'); script.src = "/js/eruda.js"; document.body.append(script); script.onload = function () { eruda.init(); } })();
+	(function () { var script = document.createElement('script'); script.src = "../js/eruda.js"; document.body.append(script); script.onload = function () { eruda.init(); } })();
 }
 
 function getUrlParameters(param) {
