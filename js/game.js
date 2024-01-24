@@ -482,8 +482,9 @@ csbackButton = createButton(0, 300, 'BACK', 'customStage', buttonEl => {
 
 csGoButton = createButton(0, 240, 'GO!', 'customStage', buttonEl => {
 	alert('in development, prone to glitches')
-	var debug_cstest = document.getElementById('cs-txt-area').value
-	stages = [new Stage(solitaryTheme, debug_cstest.split('\n'))];
+	var custom_lev = document.getElementById('cs-txt-area').value
+	stages = [new Stage(solitaryTheme, custom_lev.split('\n'))];//debug_cstest.split('\n'))];
+	alert(stages);
 	custom_stage = true
 	timer = 0;
 	stageIndex = 0;
@@ -4762,7 +4763,7 @@ stages = [new Stage(solitaryTheme, [
 		'■                    E  BBBB  E                            ■',
 		'■                                                          ■',
 		'■                                                          ■',
-		'■                                                          ■',
+		'■                     ꜜ                                    ■',
 		'■◣                                                         ■',
 		'■■◣ P                                                      ■',
 		'■■■■■■■■■■■■■+■■■■■■■■■■■■■+■■■■■■■■■■■■■■+■■■■■■■■■■■■■■■■■',
