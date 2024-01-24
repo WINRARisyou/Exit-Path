@@ -1319,6 +1319,137 @@ const solitaryTheme = new Theme('Solitary Confinement')
 		return [fillStyle, strokeStyle];
 	});
 
+const undergroundPrisionTheme = new Theme('Underground Confinement Area')
+	.setBgStyle('#444')
+	.setBg2Image(createImage(25, 25, ctx => {
+		const c1 = '#333',
+			c2 = '#222';
+		const gradient1 = ctx.createLinearGradient(0, 0, 25, 12.5);
+		gradient1.addColorStop(0.25, c1);
+		gradient1.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient1;
+		ctx.fillRect(0, 0, 25, 12.5);
+		const gradient2 = ctx.createLinearGradient(-12.5, 12.5, 12.5, 25);
+		gradient2.addColorStop(0.25, c1);
+		gradient2.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient2;
+		ctx.fillRect(0, 12.5, 12.5, 12.5);
+		const gradient3 = ctx.createLinearGradient(12.5, 12.5, 37.5, 25);
+		gradient3.addColorStop(0.25, c1);
+		gradient3.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient3;
+		ctx.fillRect(12.5, 12.5, 12.5, 12.5);
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.stroke();
+	}))
+	.addImageRange('□', 1, i => createImage(20, 20, ctx => {
+		const c1 = gray(128),
+			c2 = gray(96);
+		const gradient1 = ctx.createLinearGradient(0, 0, 20, 10);
+		gradient1.addColorStop(0.25, c1);
+		gradient1.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient1;
+		ctx.fillRect(0, 0, 20, 10);
+		const gradient2 = ctx.createLinearGradient(-10, 10, 10, 20);
+		gradient2.addColorStop(0.25, c1);
+		gradient2.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient2;
+		ctx.fillRect(0, 10, 10, 10);
+		const gradient3 = ctx.createLinearGradient(10, 10, 30, 20);
+		gradient3.addColorStop(0.25, c1);
+		gradient3.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient3;
+		ctx.fillRect(10, 10, 10, 10);
+		ctx.strokeStyle = gray(64);
+		ctx.lineWidth = 0.5;
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(20, 0);
+		ctx.lineTo(20, 10);
+		ctx.lineTo(0, 10);
+		ctx.lineTo(0, 0);
+		ctx.moveTo(10, 10);
+		ctx.lineTo(10, 20);
+		ctx.moveTo(0, 20);
+		ctx.lineTo(20, 20);
+		ctx.stroke();
+	}))
+	.addImageRange('▓', 4, i => createImage(20, 20, ctx => {
+		const c1 = gray(40 + i * 4),
+			c2 = gray(16 + i * 4);
+		const gradient1 = ctx.createLinearGradient(0, 0, 20, 10);
+		gradient1.addColorStop(0.25, c1);
+		gradient1.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient1;
+		ctx.fillRect(0, 0, 20, 10);
+		const gradient2 = ctx.createLinearGradient(-10, 10, 10, 20);
+		gradient2.addColorStop(0.25, c1);
+		gradient2.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient2;
+		ctx.fillRect(0, 10, 10, 10);
+		const gradient3 = ctx.createLinearGradient(10, 10, 30, 20);
+		gradient3.addColorStop(0.25, c1);
+		gradient3.addColorStop(0.75, c2);
+		ctx.fillStyle = gradient3;
+		ctx.fillRect(10, 10, 10, 10);
+		ctx.strokeStyle = gray(32 + i * 4);
+		ctx.lineWidth = 0.5;
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(20, 0);
+		ctx.lineTo(20, 10);
+		ctx.lineTo(0, 10);
+		ctx.lineTo(0, 0);
+		ctx.moveTo(10, 10);
+		ctx.lineTo(10, 20);
+		ctx.moveTo(0, 20);
+		ctx.lineTo(20, 20);
+		ctx.stroke();
+	}))
+	.addImageRange('<', 1, i => leftMoverImage)
+	.addImageRange('>', 1, i => rightMoverImage)
+	.addBlockStyles(4, 5, (i, ctx) => {
+		// Fill style
+		const fillImage = createImage(20, 20, c => {
+			const c1 = gray(60 + i * 4),
+				c2 = gray(42 + i * 4);
+			const gradient1 = ctx.createLinearGradient(0, 0, 20, 10);
+			gradient1.addColorStop(0.25, c1);
+			gradient1.addColorStop(0.75, c2);
+			c.fillStyle = gradient1;
+			c.fillRect(0, 0, 20, 10);
+			const gradient2 = ctx.createLinearGradient(-10, 10, 10, 20);
+			gradient2.addColorStop(0.25, c1);
+			gradient2.addColorStop(0.75, c2);
+			c.fillStyle = gradient2;
+			c.fillRect(0, 10, 10, 10);
+			const gradient3 = ctx.createLinearGradient(10, 10, 30, 20);
+			gradient3.addColorStop(0.25, c1);
+			gradient3.addColorStop(0.75, c2);
+			c.fillStyle = gradient3;
+			c.fillRect(10, 10, 10, 10);
+			c.strokeStyle = gray(48 + i * 4);
+			c.lineWidth = 0.5;
+			c.beginPath();
+			c.moveTo(0, 0);
+			c.lineTo(20, 0);
+			c.lineTo(20, 10);
+			c.lineTo(0, 10);
+			c.lineTo(0, 0);
+			c.moveTo(10, 10);
+			c.lineTo(10, 20);
+			c.moveTo(0, 20);
+			c.lineTo(20, 20);
+			c.stroke();
+		});
+		const fillStyle = ctx.createPattern(fillImage, 'no-repeat');
+		// Stroke style (no stroke)
+		const strokeStyle = '#0000';
+		return [fillStyle, strokeStyle];
+	});
+
 const testingTheme = new Theme('Testing Rooms')
 	.setBgStyle('#BBB')
 	.setBg1Image(createImage(75, 75, ctx => {
@@ -4530,7 +4661,7 @@ class Stage {
 	initialize() {
 		stageTextEl.textContent = `Stage ${stageIndex + 1}`;
 		themeNameEl.textContent = this.theme.name;
-		levelNameEl.textContent = this.theme.name + 'dasfaef';
+		levelNameEl.textContent = 'Level';
 		if (this.thought) {
 			think(this.thought, 'game', () => {
 				this.begin();
@@ -4749,54 +4880,63 @@ class Stage {
 
 
 if (!DEBUG_LEVEL && !custom_stage) {
-stages = [new Stage(solitaryTheme, [
-		'■                          U                               ■',
-		'■                         ■▼■                              ■',
-		'■                          ■                               ■',
-		'■                                                          ■',
-		'■                                                          ■',
-		'■                                                          ■',
-		'■                E       MMMMM                             ■',
-		'■                                                          ■',
-		'■                                                          ■',
-		'■                                                          ■',
-		'■                    E  BBBB  E                            ■',
-		'■                                                          ■',
-		'■                                                          ■',
-		'■                     ꜜ                                    ■',
-		'■◣                                                         ■',
-		'■■◣ P                                                      ■',
-		'■■■■■■■■■■■■■+■■■■■■■■■■■■■+■■■■■■■■■■■■■■+■■■■■■■■■■■■■■■■■',
-		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
-		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
-		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■'
+stages = [
+	new Stage(undergroundPrisionTheme, [
+		'■          ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■          ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■          ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■          ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■          ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■          ■■■■■■■■■■■■■■■■■■■■■■■■■■■■◤',
+		'■          ◥■■■■■■■■■■■■■■■■■■■■■■■■■■◤ ',
+		'■           ◥■■■■■■■■■■■■■■■■■■■■■■■■◤  ',
+		'■            ◥■■■■■■■■■■■■■■■■■■■■■■◤   ',
+		'■             ◥■■■■■■■■■■■■■■■■■■■■◤    ',
+		'■              ◥■■■■■■■■■■■■■■■■■■◤     ',
+		'■                                       ',
+		'■                                       ',
+		'■                                       ',
+		'■◣                                      ',
+		'■■◣ P                                   ',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■'
 	], ctx => {
-		levelName = 'DEBUG'
-		drawSign(ctx, 300, 100, 100, 40);
-		drawSignLight(ctx, 225, 220, 30);
-		drawSignLight(ctx, 275, 220, 30);
-		ctx.font = arial(9);
-		ctx.fillStyle = '#DDD';
-		drawSquare(ctx, 340, 103, 20, 20, false);
-		centerText(ctx, 'Not a debug level', 350, 135);
-		ctx.fillRect(242, 225, 16, 16);
-		ctx.beginPath();		
-		drawSign(ctx, 450, 220, 285, 40);
-		drawSignLight(ctx, 485, 220, 30);
-		drawSignLight(ctx, 593, 220, 30);
-		drawSignLight(ctx, 700, 220, 30);
-		ctx.font = arial(9);
-		ctx.fillStyle = '#DDD';
-		centerText(ctx, 'UP OR W TO JUMP', 500, 252);
-		centerText(ctx, 'HOLD LONGER TO JUMP HIGHER', 650, 252);
-		ctx.fillRect(500, 225, 16, 16);
+		levelNameEl.textContent = 'How was the fall?'
+		drawSign(ctx, 75, 100, 100, 40, 20);
+		ctx.font = arial(14, true);
+		ctx.fillStyle = '#777';
+		wrapCenterText(ctx, "You've had quite the fall, haven't you?", 127, 115, 100, 10)
 	}),
-	]; 
-} //else if (custom_stage) {
-// 	alert('custom stage')
-// 	//stages = stageOverride
-// 	alert(stages)
-// }
+	
+	new Stage(undergroundPrisionTheme, [
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'                         ',
+		'                         ',
+		'                         ',
+		'                         ',
+		'                         ',
+		'                         ',
+		'                         ',
+		'                         ',
+		'    P                    ',
+		'                         ',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■',
+		'■■■■■■■■■■■■■■■■■■■■■■■■■'
+	], ctx => {
+		levelNameEl.textContent = 'Back to Basics'
+		drawSign(ctx, 200, 200, 160, 50)
+	})
+]; 
+}
 
 function renderMenu() {
 
