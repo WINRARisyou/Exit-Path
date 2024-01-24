@@ -20,7 +20,8 @@ Modified by WinRAR on github, https://github.com/WINRARisyou/Exit-Path
 	<canvas id="game-layer" tabindex="0" width="600" height="400"></canvas>
 	<canvas id="flow-meter-layer" tabindex="0" width="340" height="30"></canvas>
 	<span id="flow-ready-text" hidden>FLOW READY (PUSH SPACE)</span>
-	<div id="ep3" hidden>EXIT PATH&nbsp;<span id="three">4</span></div>
+	<div id="ep3" hidden>EXIT PATH&nbsp;<span id="four">4</span></div>
+	<span id="cs" hidden>CUSTOM STAGE</span>
 	<span id="hs" hidden>FASTEST RUNNERS</span>
 	<span id="personal-best" hidden></span>
 	<span id="stage-text" hidden></span>
@@ -54,6 +55,7 @@ Modified by WinRAR on github, https://github.com/WINRARisyou/Exit-Path
 			<li>—</li>
 		</ol>
 		<div id="hs-instructions" hidden>
+			<button onclick='window.open(window.location, "Exit Path 4", "left=100,top=100,width=600,height=400",);'>open popup</button>
 			<p>
 				TO BECOME A FASTEST RUNNER, SAVE AS A SPINOFF <em>WITH THIS PAGE VISIBLY DISPLAYING YOUR PERSONAL
 					BEST</em> AND LINK THE SPINOFF IN THE T&T.
@@ -69,14 +71,38 @@ Modified by WinRAR on github, https://github.com/WINRARisyou/Exit-Path
 			<li>—</li>
 		</ol>
 	</div>
+	<br>
+	<div id="cs-center-txt-area" width="600px" hidden>
+		<textarea id="cs-txt-area" height="100" placeholder="Enter stage code here" hidden></textarea>
+	</div>
 	<!-- Thanks Willard! <script></script> -->
 	<script type="application/javascript" src="/js/game.js"></script>
 	<script>
-		if (DEBUG_LEVEL) {
+		if (DEBUG_LEVEL && !custom_stage) {
 		stages = [
 			new Stage(solitaryTheme, [
-			'                              ','                              ','                              ','                              ','                              ','                              ','                              ','           ■■■■■■■            ','           ■□ . □■            ','           ■ ■■■ ■            ','           ■}■P■{■            ','           ■ ■■■ ■            ','           ■□ ^ □■            ','           ■■■■■■■            ','                              ','                              ','                              ','                              ','                              ','                              '
-			]),
+			'                              ',
+			'                              ',
+			'                              ',
+			'                              ',
+			'                              ',
+			'                              ',
+			'                              ',
+			'           ■■■■■■■            ',
+			'           ■□ . □■            ',
+			'           ■ ■■■ ■            ',
+			'           ■}■P■{■            ',
+			'           ■ ■■■ ■            ',
+			'           ■□ ^ □■            ',
+			'           ■■■■■■■            ',
+			'                              ',
+			'                              ',
+			'                              ',
+			'                              ',
+			'                              ',
+			'                              '
+		]
+		),
 			
 			
 			new Stage(solitaryTheme, [
